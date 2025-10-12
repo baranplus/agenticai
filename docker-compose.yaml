@@ -1,0 +1,31 @@
+services:
+
+    app:
+        image: ${APP_IMAGE}
+        container_name: agentic_rag_container
+        build:
+            context: .
+            dockerfile: Dockerfile.Base
+        ports:
+        - "${APP_PORT}:8000"
+        environment:
+            API_KEY: ${API_KEY}
+            BASE_URL: ${BASE_URL}
+            GENERATION_MODEL: ${GENERATION_MODEL}
+            EMBEDDING_MODEL: ${EMBEDDING_MODEL}
+            WEAVIATE_HOST: ${WEAVIATE_HOST}
+            WEAVIATE_PORT: ${WEAVIATE_PORT}
+            WEAVIATE_USER_KEY: ${WEAVIATE_USER_KEY}
+            WEAVIATE_COLLECTION: ${WEAVIATE_COLLECTION}
+        volumes:
+            - ./app:/app
+        command: 
+            [
+                "uvicorn",
+                "main:app",
+                "--host",
+                "0.0.0.0",
+                "--workers",
+                "1"
+            ]
+        restart: always
