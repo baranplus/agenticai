@@ -17,8 +17,7 @@ REWRITE_PROMPT = (
 
 def rewrite_question(state: State):
     """Rewrite the original user question."""
-    messages = state["messages"]
-    question = messages[0].content
+    question = state["messages"][-2].content
     prompt = REWRITE_PROMPT.format(question=question)
     response = generation_model.llm.invoke([{"role": "user", "content": prompt}])
     logger.info(response.content)
