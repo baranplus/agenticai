@@ -1,3 +1,4 @@
+import os
 from langchain.schema import Document
 from weaviate.collections.classes.internal import Object as WeaviateObject
 from typing import List
@@ -6,6 +7,8 @@ from .state import State
 from db import weaviate_client
 from db.vector_store import get_weaviate_vector_store
 from llm import embedding_func
+
+HYBRID_SEARCH_ALPHA = float(os.environ.get("HYBRID_SEARCH_ALPHA"))
 
 def convert_weaviate_objects_to_langchain_docs(weaviate_objects: List[WeaviateObject]) -> List[Document]:
     """
@@ -57,7 +60,7 @@ def retrieve_documents_use_weaviate_embedding(state : State) -> str:
     collection = weaviate_client.collections.get(state["collection_name"])
     query = state["messages"][-1].content
 
-    response = collection.query.hybrid(query=query, limit=state["top_k"])
+    response = collection.query.hybrid(query=query, limit=state["top_k"], alpha=HYBRID_SEARCH_ALPHA)
     docs = convert_weaviate_objects_to_langchain_docs(response.objects)
     results = "\n".join(doc.page_content for doc in docs)
 

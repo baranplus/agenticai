@@ -16,6 +16,7 @@ services:
             WEAVIATE_HOST: ${WEAVIATE_HOST}
             WEAVIATE_PORT: ${WEAVIATE_PORT}
             WEAVIATE_USER_KEY: ${WEAVIATE_USER_KEY}
+            HYBRID_SEARCH_ALPHA: ${HYBRID_SEARCH_ALPHA}
         volumes:
             - ./app:/app
         command: 

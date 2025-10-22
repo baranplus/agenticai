@@ -53,6 +53,7 @@ EMBEDDING_MODEL=your_embedding_model
 WEAVIATE_HOST=weaviate
 WEAVIATE_PORT=port
 WEAVIATE_USER_KEY=root_user_key
+HYBRID_SEARCH_ALPHA= 1.0 pure vector search, 0.0 pure keyword search
 ```
 
 ## Installation and Running
