@@ -43,7 +43,7 @@ def retrieve_documents(state : State) -> str:
     """Query vector database. Use this for any question regarding national rules of IR"""
 
     weaviate_vector_store = get_weaviate_vector_store(weaviate_client, state["collection_name"], embedding_func.embeddings_model)
-    retriever = weaviate_vector_store.as_retriever(search_kwargs={"k" : 5})
+    retriever = weaviate_vector_store.as_retriever(search_kwargs={"k" : state["top_k"]})
     query = state["messages"][-1].content
     docs = retriever.invoke(query)
     results = "\n".join(doc.page_content for doc in docs)
@@ -57,7 +57,7 @@ def retrieve_documents_use_weaviate_embedding(state : State) -> str:
     collection = weaviate_client.collections.get(state["collection_name"])
     query = state["messages"][-1].content
 
-    response = collection.query.near_text(query="A holiday film", limit=2)
+    response = collection.query.near_text(query="A holiday film", limit=state["top_k"])
     docs = convert_weaviate_objects_to_langchain_docs(response.objects)
     results = "\n".join(doc.page_content for doc in docs)
 

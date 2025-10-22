@@ -33,6 +33,7 @@ async def query(request: QueryRequest):
             "docs" : [],
             "sourcing" : {},
             "collection_name" : request.collection,
+            "top_k" : request.top_k
         }
 
         if request.use_local_embedding:

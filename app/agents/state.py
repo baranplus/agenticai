@@ -9,3 +9,4 @@ class State(TypedDict):
     sourcing: dict
     rewrite_count: int
     collection_name: str
+    top_k: int
