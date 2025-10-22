@@ -15,7 +15,8 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
 
 - Docker and Docker Compose
 - Python 3.12+
-- Make sure ports 8700 (API), and 8500 (Weaviate) are available
+- Make sure port 8700 (API) is available
+- Weaviate should be accessible at port 8500 on the configured host
 
 ## Project Structure
 
@@ -50,9 +51,8 @@ EMBEDDING_MODEL=your_embedding_model
 
 # Weaviate Configuration
 WEAVIATE_HOST=weaviate
-WEAVIATE_USER=admin
-WEAVIATE_PASS=your_password
-WEAVIATE_COLLECTION=your_collection
+WEAVIATE_PORT=port
+WEAVIATE_USER_KEY=root_user_key
 ```
 
 ## Installation and Running
@@ -76,26 +76,33 @@ docker-compose down
 ```
 
 3. The services will be available at:
-   - FastAPI application: http://localhost:8400
-   - ChromaDB: http://localhost:8300
-   - Weaviate: http://localhost:8500
+   - FastAPI application: http://host:8700
+   - Weaviate: http://host:8500
 
 ## API Usage
 
 The main RAG endpoint is available at:
 ```
-POST /api/v1/rag/query
+POST /api/v1/query
 
 {
-    "message": "Your question in Persian",
+    "message": "Your question",
+    "collection": "your_collection_name",
+    "top_k": 3,
+    "use_local_embedding": true
 }
 ```
 
 Example using curl:
 ```bash
-curl -X POST "http://localhost:8400/api/v1/rag/query" \
+curl -X POST "http://localhost:8700/api/v1/query" \
      -H "Content-Type: application/json" \
-     -d '{"message": "قوانین منطقه آزاد تجاری به چه صورت است؟"}'
+     -d '{
+           "message": "What are the rules?",
+           "collection": "my_collection",
+           "top_k": 3,
+           "use_local_embedding": false
+         }'
 ```
 
 ## Development
