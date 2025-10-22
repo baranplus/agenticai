@@ -57,7 +57,7 @@ def retrieve_documents_use_weaviate_embedding(state : State) -> str:
     collection = weaviate_client.collections.get(state["collection_name"])
     query = state["messages"][-1].content
 
-    response = collection.query.near_text(query="A holiday film", limit=state["top_k"])
+    response = collection.query.hybrid(query=query, limit=state["top_k"])
     docs = convert_weaviate_objects_to_langchain_docs(response.objects)
     results = "\n".join(doc.page_content for doc in docs)
 

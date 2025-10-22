@@ -5,8 +5,8 @@ from utils.logger import logger
 
 REWRITE_PROMPT = (
     "Look at the input and try to reason about the underlying semantic intent / meaning.\n"
-    "The meaning of the improved question should be close to legal matters, laws and rules."
-    "Important : Don't answer in english and don't translate from persian to english first"
+    "Try to change the query into a series of related keyword. \n"
+    "Important : Don't answer in english and don't translate from persian to english first. \n"
     "Critical: The improved question should be written in persian (Farsi).\n"
     "Here is the initial question:"
     "\n ------- \n"

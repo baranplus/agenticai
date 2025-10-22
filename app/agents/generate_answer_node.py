@@ -11,7 +11,7 @@ GENERATE_PROMPT = (
     "If you use information from a snippet to make a statement, your statement (the answer to question) should be followed by the snippet number in this format : **(<number>)**.\n"
     "For example, if your use 'Snippet 4' to answer a question, your answer should look like this : '<answer> **(4)**.\n"
     "If you combined multiple snippets (e.g 5 and 3) to answer a question, your answer should look like this : '<first statement> **(5)**, <second statement> **(3)**, ...'.\n"
-    "If you don't have enough information to answer, just say the following failure message : 'There wasn't enough information to answer the question'.\n"
+    "If you don't have enough information to answer, just say only the following failure message in persian : 'اطلاعات کافی برای پاسخ وجود ندارد'.\n"
     "Critical: The answer should be written in persian (Farsi) only and not in english."
     "Question: {question} \n"
     "Context: {context}"
@@ -33,7 +33,5 @@ def generate_answer(state: State):
     question = state["messages"][-2].content
     context, sourcing  = augment_context(state)
     prompt = GENERATE_PROMPT.format(question=question, context=context)
-    logger.info(f"Context : {context}")
-    logger.info(len(context))
     response = generation_model.llm.invoke([{"role": "user", "content": prompt}])
     return {"messages": [response], "rewrite_count" : state["rewrite_count"], "docs" : state["docs"], "sourcing" : sourcing}
