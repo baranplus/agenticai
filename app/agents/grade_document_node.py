@@ -1,5 +1,5 @@
 import os
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from typing import Literal
 
 from .state import State
@@ -14,7 +14,7 @@ GRADE_PROMPT = (
     "Here is the retrieved document: \n\n {context} \n\n"
     "Here is the user question: {question} \n"
     "If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n"
-    "Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."
+    "Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question."
 )
 
 class GradeDocuments(BaseModel):
@@ -23,6 +23,16 @@ class GradeDocuments(BaseModel):
     binary_score: str = Field(
         description="Relevance score: 'yes' if relevant, or 'no' if not relevant"
     )
+
+def safe_parse_grade(response_text: str) -> GradeDocuments:
+    try:
+        
+        return GradeDocuments.model_validate_json(response_text)
+    except Exception:
+        
+        if "yes" in response_text.lower():
+            return GradeDocuments(binary_score="yes")
+        return GradeDocuments(binary_score="no")
 
 def grade_documents(state: State) -> Literal["generate_answer", "rewrite_question"]:
 
@@ -33,13 +43,9 @@ def grade_documents(state: State) -> Literal["generate_answer", "rewrite_questio
         context = state["messages"][-1].content
 
         prompt = GRADE_PROMPT.format(question=question, context=context)
-        response = (
-            grader_model.llm
-            .with_structured_output(GradeDocuments).invoke(
-                [{"role": "user", "content": prompt}]
-            )
-        )
-        score = response.binary_score
+        response = grader_model.llm.invoke([{"role": "user", "content": prompt}])
+        parsed_response = safe_parse_grade(response.content)
+        score = parsed_response.binary_score
 
         if score == "yes":
             return "generate_answer"
