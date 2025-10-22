@@ -8,3 +8,4 @@ class State(TypedDict):
     docs: list[Document]
     sourcing: dict
     rewrite_count: int
+    collection_name: str
