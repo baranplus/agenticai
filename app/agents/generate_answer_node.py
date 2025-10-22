@@ -1,15 +1,6 @@
 from .state import State
 from llm import generation_model
-
-# GENERATE_PROMPT = (
-#     "You are an assistant for question-answering tasks. Your response will be used by another agent to determine the final answer.\n"
-#     "Use the following pieces of retrieved context to answer the question. Explain your answer based on the provided context.\n"
-#     "The question should be about legal matters, laws and rule. If it isn't say that question is irrelavant to the topics mentioned.\n"
-#     "If you don't know the answer, just say that you don't know. "
-#     "Important: The answer should be written in persian (Farsi).\n"
-#     "Question: {question} \n"
-#     "Context: {context}"
-# )
+from utils.logger import logger
 
 GENERATE_PROMPT = (
     "You are a data-based question answering assistant.\n"
@@ -21,7 +12,7 @@ GENERATE_PROMPT = (
     "For example, if your use 'Snippet 4' to answer a question, your answer should look like this : '<answer> **(4)**.\n"
     "If you combined multiple snippets (e.g 5 and 3) to answer a question, your answer should look like this : '<first statement> **(5)**, <second statement> **(3)**, ...'.\n"
     "If you don't have enough information to answer, just say the following failure message : 'There wasn't enough information to answer the question'.\n"
-    "Important: The answer should be written in persian (Farsi)."
+    "Critical: The answer should be written in persian (Farsi) only and not in english."
     "Question: {question} \n"
     "Context: {context}"
 )
@@ -43,5 +34,7 @@ def generate_answer(state: State):
     context = state["messages"][-1].content
     context, sourcing  = augment_context(state)
     prompt = GENERATE_PROMPT.format(question=question, context=context)
+    logger.info(f"Context : {context}")
+    logger.info(len(state["messages"]))
     response = generation_model.llm.invoke([{"role": "user", "content": prompt}])
     return {"messages": [response], "rewrite_count" : state["rewrite_count"], "docs" : state["docs"], "sourcing" : sourcing}
