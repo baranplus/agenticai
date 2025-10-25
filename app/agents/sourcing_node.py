@@ -1,6 +1,10 @@
 import re
+import urllib.parse
+import os
 
 from .state import State
+
+SOURCE_DOWNLOAD_API_PATH_BASE = os.environ.get('SOURCE_DOWNLOAD_API_PATH_BASE')
 
 superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 
@@ -32,7 +36,6 @@ def prettify_sources(text):
     return replaced_text, superscript_to_old
 
 def show_source(state : State):
-
     answer = state["messages"][-1].content
     sourcing = state["sourcing"]
 
@@ -41,6 +44,11 @@ def show_source(state : State):
 
     for superscript, integer in source_matching.items():
         src_meta = sourcing[integer]
-        new_answer += superscript + src_meta["source"] + "\n"
+        filename = src_meta["source"]
+        # Create a markdown link that opens in a new tab with full URL
+        encoded_filename = urllib.parse.quote(filename)
+        download_url = f"{SOURCE_DOWNLOAD_API_PATH_BASE}/{encoded_filename}"
+        download_link = f"[{filename}]({download_url})"
+        new_answer += f"{superscript} {download_link}\n"
 
     return {"messages": [{"role" : "user", "content" : new_answer.strip()}], "rewrite_count" : state["rewrite_count"], "docs" : state["docs"], "sourcing" : state["sourcing"]}
