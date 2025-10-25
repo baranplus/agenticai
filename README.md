@@ -54,6 +54,13 @@ WEAVIATE_HOST=weaviate
 WEAVIATE_PORT=port
 WEAVIATE_USER_KEY=root_user_key
 HYBRID_SEARCH_ALPHA= 1.0 pure vector search, 0.0 pure keyword search
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://host:port
+MONGODB_DB_NAME=db name
+MONGODB_COLLECTION_SOURCE_FILES=collection source files name
+MONGO_INITDB_DEV_USERNAME=root user
+MONGO_INITDB_DEV_PASSWORD=root password
 ```
 
 ## Installation and Running
