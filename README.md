@@ -4,12 +4,17 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
 
 ## Features
 
-- Agent-based RAG architecture
-- Question rewriting for improved retrieval
-- Document grading for relevance assessment
-- Persian (Farsi) language support
-- Docker containerization
-- Basic authentication for vector stores
+- Agent-based RAG architecture with multiple specialized nodes:
+  - Question rewriting for improved retrieval
+  - Document grading for relevance assessment
+  - Source attribution with downloadable references
+- Persian (Farsi) language support with proper text handling
+- Integrated document storage and retrieval:
+  - Weaviate for vector search
+  - MongoDB for source document storage
+  - Downloadable source documents with UTF-8 support
+- Docker containerization for easy deployment
+- Authentication for data stores
 
 ## Prerequisites
 
@@ -24,10 +29,19 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
 .
 ├── app/
 │   ├── agents/          # Agent-based RAG components
-│   ├── db/             # Database and vector store implementations
+│   │   ├── rewrite_question_node.py  # Question optimization
+│   │   ├── retriever_node.py        # Document retrieval
+│   │   ├── grade_document_node.py   # Relevance assessment
+│   │   ├── sourcing_node.py         # Source attribution and links
+│   │   └── generate_answer_node.py  # Answer generation
+│   ├── db/             # Database implementations
+│   │   ├── vector_store.py         # Weaviate integration
+│   │   └── client.py              # MongoDB integration
 │   ├── llm/            # LLM configurations and templates
 │   ├── routers/        # FastAPI routes
-│   ├── schema/         # Data models
+│   │   ├── agentic_rag.py        # Main query endpoint
+│   │   └── download_source.py    # Source file downloads
+│   ├── schema/         # Data models and validation
 │   └── utils/          # Utility functions
 ├── docker-compose.yaml
 ├── Dockerfile.Base
@@ -61,6 +75,9 @@ MONGODB_DB_NAME=db name
 MONGODB_COLLECTION_SOURCE_FILES=collection source files name
 MONGO_INITDB_DEV_USERNAME=root user
 MONGO_INITDB_DEV_PASSWORD=root password
+
+# Source Download API Configuration
+SOURCE_DOWNLOAD_API_PATH_BASE=http://host:port/api/v1/download
 ```
 
 ## Installation and Running
@@ -89,8 +106,8 @@ docker-compose down
 
 ## API Usage
 
-The main RAG endpoint is available at:
-```
+### Main Query Endpoint
+```http
 POST /api/v1/query
 
 {
@@ -112,6 +129,24 @@ curl -X POST "http://localhost:8700/api/v1/query" \
            "use_local_embedding": false
          }'
 ```
+
+### Source Document Download
+The system provides downloadable links to source documents referenced in responses:
+
+```http
+GET /api/v1/download/{filename}
+```
+
+Features:
+- Streams file content for efficient memory usage
+- Supports UTF-8 filenames (Persian/Arabic text)
+- Automatic content-type detection
+- Proper file attachment headers for browser downloads
+
+The download URLs are automatically included in query responses when sources are referenced. Each source reference includes:
+- A superscript number (e.g., ¹, ², ³)
+- A clickable link to download the source document
+- Automatic deduplication of repeated sources
 
 ## Development
 
@@ -137,12 +172,20 @@ uvicorn app.main:app --reload --port 8000
 
 1. If you get authentication errors:
    - Check if the `.env` file contains the correct credentials
-   - Verify the authentication settings in both ChromaDB and Weaviate services
+   - Verify MongoDB authentication settings (username, password, and database)
+   - Check Weaviate API key configuration
 
-2. If the services don't start:
+2. If source downloads fail:
+   - Verify `SOURCE_DOWNLOAD_API_PATH_BASE` is correctly set in `.env`
+   - Check MongoDB connection and collection name
+   - Ensure the files were properly uploaded to MongoDB
+   - For Persian/Arabic filenames, verify UTF-8 encoding is preserved
+
+3. If the services don't start:
    - Check if the required ports are available
    - Verify Docker and Docker Compose installation
    - Check the logs using `docker-compose logs`
+   - Ensure all required environment variables are set
 
 ## Contributing
 
