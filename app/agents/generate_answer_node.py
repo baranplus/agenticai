@@ -30,7 +30,7 @@ def augment_context(input_dict):
 
 def generate_answer(state: State):
     """Generate an answer."""
-    question = state["messages"][-2].content
+    question = state["messages"][0].content
     context, sourcing  = augment_context(state)
     prompt = GENERATE_PROMPT.format(question=question, context=context)
     response = generation_model.llm.invoke([{"role": "user", "content": prompt}])

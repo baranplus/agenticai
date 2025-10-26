@@ -1,6 +1,7 @@
 import os
 from langchain.schema import Document
 from weaviate.collections.classes.internal import Object as WeaviateObject
+from weaviate.classes.query import BM25Operator
 from typing import List
 
 from .state import State
@@ -60,7 +61,14 @@ def retrieve_documents_use_weaviate_embedding(state : State) -> str:
     collection = weaviate_client.collections.get(state["collection_name"])
     query = state["messages"][-1].content
 
-    response = collection.query.hybrid(query=query, limit=state["top_k"], alpha=HYBRID_SEARCH_ALPHA)
+    min_match = int(len(query.split()) / 2)
+
+    response = collection.query.hybrid(
+        query=query, 
+        limit=state["top_k"], 
+        alpha=HYBRID_SEARCH_ALPHA, 
+        bm25_operator=BM25Operator.or_(minimum_match=min_match)
+    )
     docs = convert_weaviate_objects_to_langchain_docs(response.objects)
     results = "\n".join(doc.page_content for doc in docs)
 
