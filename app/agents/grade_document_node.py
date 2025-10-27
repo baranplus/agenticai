@@ -5,8 +5,6 @@ from typing import Literal
 from .state import State
 from llm import grader_model
 
-from utils.logger import logger
-
 MAX_RETRY_NUMBER_FOR_AGENTS = int(os.environ.get("MAX_RETRY_NUMBER_FOR_AGENTS", 3 ))
 
 GRADE_PROMPT = (
@@ -39,14 +37,13 @@ def grade_documents(state: State) -> Literal["generate_answer", "rewrite_questio
     """Determine whether the retrieved documents are relevant to the question."""
 
     if state["rewrite_count"] < MAX_RETRY_NUMBER_FOR_AGENTS:
-        question = state["messages"][-2].content
+        question = state["messages"][0].content
         context = state["messages"][-1].content
 
         prompt = GRADE_PROMPT.format(question=question, context=context)
         response = grader_model.llm.invoke([{"role": "user", "content": prompt}])
         parsed_response = safe_parse_grade(response.content)
         score = parsed_response.binary_score
-
         if score == "yes":
             return "generate_answer"
         else:
