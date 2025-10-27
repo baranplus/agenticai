@@ -4,7 +4,7 @@ from weaviate.collections.classes.internal import Object as WeaviateObject
 from weaviate.classes.query import BM25Operator
 from typing import List
 
-from .state import State
+from .state import AgenticRAGState
 from db import weaviate_client
 from db.vector_store import get_weaviate_vector_store
 from llm import embedding_func
@@ -42,7 +42,7 @@ def convert_weaviate_objects_to_langchain_docs(weaviate_objects: List[WeaviateOb
 
     return langchain_docs
 
-def retrieve_documents(state : State) -> str:
+def retrieve_documents(state : AgenticRAGState) -> str:
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 
@@ -54,7 +54,7 @@ def retrieve_documents(state : State) -> str:
 
     return {"messages": [{"role" : "user", "content" : results}], "rewrite_count" : state["rewrite_count"], "docs" : docs, "sourcing" : state["sourcing"]}
 
-def retrieve_documents_use_weaviate_embedding(state : State) -> str:
+def retrieve_documents_use_weaviate_embedding(state : AgenticRAGState) -> str:
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 

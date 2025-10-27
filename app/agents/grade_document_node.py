@@ -2,7 +2,7 @@ import os
 from pydantic import BaseModel, Field, ValidationError
 from typing import Literal
 
-from .state import State
+from .state import AgenticRAGState
 from llm import grader_model
 
 MAX_RETRY_NUMBER_FOR_AGENTS = int(os.environ.get("MAX_RETRY_NUMBER_FOR_AGENTS", 3 ))
@@ -32,7 +32,7 @@ def safe_parse_grade(response_text: str) -> GradeDocuments:
             return GradeDocuments(binary_score="yes")
         return GradeDocuments(binary_score="no")
 
-def grade_documents(state: State) -> Literal["generate_answer", "rewrite_question"]:
+def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_rag", "rewrite_question"]:
 
     """Determine whether the retrieved documents are relevant to the question."""
 
@@ -45,8 +45,8 @@ def grade_documents(state: State) -> Literal["generate_answer", "rewrite_questio
         parsed_response = safe_parse_grade(response.content)
         score = parsed_response.binary_score
         if score == "yes":
-            return "generate_answer"
+            return "generate_answer_agentic_rag"
         else:
             return "rewrite_question"
     else:
-        return "generate_answer"
+        return "generate_answer_agentic_rag"

@@ -1,4 +1,4 @@
-from .state import State
+from .state import AgenticRAGState
 from llm import generation_model
 
 from utils.logger import logger
@@ -18,7 +18,7 @@ REWRITE_PROMPT = (
     "Final output (only keywords):"
 )
 
-def rewrite_question(state: State):
+def rewrite_question(state: AgenticRAGState):
     """Rewrite the original user question."""
     question = state["messages"][-2].content
     prompt = REWRITE_PROMPT.format(question=question)

@@ -2,7 +2,7 @@ import re
 import urllib.parse
 import os
 
-from .state import State
+from .state import AgenticRAGState
 
 SOURCE_DOWNLOAD_API_PATH_BASE = os.environ.get('SOURCE_DOWNLOAD_API_PATH_BASE')
 
@@ -47,7 +47,7 @@ def prettify_sources(text, sourcing):
     
     return replaced_text, superscript_to_old
 
-def show_source(state : State):
+def show_source(state : AgenticRAGState):
     answer = state["messages"][-1].content
     sourcing = state["sourcing"]
 

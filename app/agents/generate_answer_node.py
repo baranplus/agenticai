@@ -1,8 +1,7 @@
-from .state import State
+from .state import AgenticRAGState, SmartSQLPipelineState
 from llm import generation_model
-from utils.logger import logger
 
-GENERATE_PROMPT = (
+GENERATE_PROMPT_AGENTIC_RAG = (
     "You are a data-based question answering assistant.\n"
     "You only base your answers on the data provided to you along with the question.\n"
     "You always refer to the specific origin of the information you need for each part of your answer.\n"
@@ -11,6 +10,16 @@ GENERATE_PROMPT = (
     "If you use information from a snippet to make a statement, your statement (the answer to question) should be followed by the snippet number in this format : **(<number>)**.\n"
     "For example, if your use 'Snippet 4' to answer a question, your answer should look like this : '<answer> **(4)**.\n"
     "If you combined multiple snippets (e.g 5 and 3) to answer a question, your answer should look like this : '<first statement> **(5)**, <second statement> **(3)**, ...'.\n"
+    "If the information provided thorough Context isn't enough to answer, just say only the following failure message in persian : 'اطلاعات کافی برای پاسخ وجود ندارد'.\n"
+    "Critical: The answer should be written in persian (Farsi) only and not in english."
+    "Question: {question} \n"
+    "Context: {context}"
+)
+
+GENERATE_PROMPT_SMART_SQL = (
+    "You are a specialized question answering assistant that exclusively analyzes SQL query results.\n"
+    "You only base your answers on the specific SQL data (rows and fields) provided to you along with the question.\n"
+    "You are given a question and a set of data rows derived from SQL query results (rows or fields) to help you answer the question.\n"
     "If the information provided thorough Context isn't enough to answer, just say only the following failure message in persian : 'اطلاعات کافی برای پاسخ وجود ندارد'.\n"
     "Critical: The answer should be written in persian (Farsi) only and not in english."
     "Question: {question} \n"
@@ -28,10 +37,18 @@ def augment_context(input_dict):
         context += f"Snippet {i+1} : {doc.page_content} <end_of_snippet>\n"
     return (context, sourcing)
 
-def generate_answer(state: State):
+def generate_answer_agentic_rag(state: AgenticRAGState):
     """Generate an answer."""
     question = state["messages"][0].content
     context, sourcing  = augment_context(state)
-    prompt = GENERATE_PROMPT.format(question=question, context=context)
+    prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
     response = generation_model.llm.invoke([{"role": "user", "content": prompt}])
     return {"messages": [response], "rewrite_count" : state["rewrite_count"], "docs" : state["docs"], "sourcing" : sourcing}
+
+def generate_answer_smart_sql(state: SmartSQLPipelineState):
+    """Generate an answer"""
+    question = state["messages"][0].content
+    context = state["messages"][-1].content
+    prompt = GENERATE_PROMPT_SMART_SQL.format(question=question, context=context)
+    respoonse = generation_model.llm.invoke([{"role": "user", "content": prompt}])
+    return {"messages": [respoonse]}

@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from langchain_core.messages import HumanMessage
 import traceback
 
-from schema.request import QueryRequest
-from schema.response import QueryResponse
-from agents.graph import build_graph, build_graph_local_embedding
+from schema.request import AgenticRAGQueryRequest
+from schema.response import GeneralResponse
+from agents.graph import build_graph, build_graph_agentic_rag_local_embedding
 from db.collection import check_collection_existence
 from db import weaviate_client
 
@@ -13,11 +13,11 @@ from utils.logger import logger
 router = APIRouter()
 
 agentic_graph = build_graph()
-agentic_graph_local_embedding = build_graph_local_embedding()
+agentic_graph_local_embedding = build_graph_agentic_rag_local_embedding()
 
 
-@router.post("/query", response_model=QueryResponse)
-async def query(request: QueryRequest):
+@router.post("/query", response_model=GeneralResponse)
+async def query(request: AgenticRAGQueryRequest):
 
     if not check_collection_existence(weaviate_client, request.collection):
         
@@ -41,7 +41,7 @@ async def query(request: QueryRequest):
         else:
             response = agentic_graph.invoke(init_state)
 
-        return QueryResponse(
+        return GeneralResponse(
             message=response["messages"][-1].content,
         )
         

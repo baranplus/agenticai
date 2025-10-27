@@ -1,4 +1,4 @@
 from pydantic import BaseModel
 
-class QueryResponse(BaseModel):
+class GeneralResponse(BaseModel):
     message: str

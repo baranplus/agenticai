@@ -35,6 +35,7 @@ env/
 # Data directories
 chroma-data/
 weaviate-data/
+assets/
 
 # Logs
 *.log

@@ -23,8 +23,16 @@ services:
             MONGO_INITDB_DEV_USERNAME: ${MONGO_INITDB_DEV_USERNAME}
             MONGO_INITDB_DEV_PASSWORD: ${MONGO_INITDB_DEV_PASSWORD}
             SOURCE_DOWNLOAD_API_PATH_BASE: ${SOURCE_DOWNLOAD_API_PATH_BASE}
+            SQL_HOST: ${SQL_HOST}
+            SQL_PORT: ${SQL_PORT}
+            SQL_USER: ${SQL_USER}
+            SQL_PASS: ${SQL_PASS}
+            SQL_DB: ${SQL_DB}
+            SQL_METADATA_CACHE_PATH: ${SQL_METADATA_CACHE_PATH}
+            SQL_REQUIRED_TABLE: ${SQL_REQUIRED_TABLE}
         volumes:
             - ./app:/app
+            - ./assets:/app/assets
         command: 
             [
                 "uvicorn",
