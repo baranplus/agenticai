@@ -8,13 +8,16 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
   - Question rewriting for improved retrieval
   - Document grading for relevance assessment
   - Source attribution with downloadable references
+  - Natural language to SQL query conversion
 - Persian (Farsi) language support with proper text handling
 - Integrated document storage and retrieval:
   - Weaviate for vector search
   - MongoDB for source document storage
+  - SQL Server for structured data querying
   - Downloadable source documents with UTF-8 support
 - Docker containerization for easy deployment
 - Authentication for data stores
+- SQL schema caching for optimized query performance
 
 ## Prerequisites
 
@@ -32,17 +35,23 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
 │   │   ├── rewrite_question_node.py  # Question optimization
 │   │   ├── retriever_node.py        # Document retrieval
 │   │   ├── grade_document_node.py   # Relevance assessment
-│   │   ├── sourcing_node.py         # Source attribution and links
+│   │   ├── sourcing_node.py        # Source attribution and links
+│   │   ├── sql_node.py             # SQL query handling
 │   │   └── generate_answer_node.py  # Answer generation
 │   ├── db/             # Database implementations
 │   │   ├── vector_store.py         # Weaviate integration
-│   │   └── client.py              # MongoDB integration
+│   │   ├── client.py              # MongoDB integration
+│   │   ├── sql_client.py          # SQL Server integration
+│   │   └── collection.py          # Collection management
 │   ├── llm/            # LLM configurations and templates
 │   ├── routers/        # FastAPI routes
 │   │   ├── agentic_rag.py        # Main query endpoint
-│   │   └── download_source.py    # Source file downloads
+│   │   ├── download_source.py    # Source file downloads
+│   │   └── smart_sql.py         # SQL query handling
 │   ├── schema/         # Data models and validation
 │   └── utils/          # Utility functions
+├── assets/            # Required folder for SQL schema cache
+│   └── schema_cache.json  # SQL database schema cache
 ├── docker-compose.yaml
 ├── Dockerfile.Base
 └── requirements.txt
@@ -78,7 +87,25 @@ MONGO_INITDB_DEV_PASSWORD=root password
 
 # Source Download API Configuration
 SOURCE_DOWNLOAD_API_PATH_BASE=http://host:port/api/v1/download
+
+## SQL Server Configuration
+SQL_HOST=sql server host
+SQL_PORT=sql server port
+SQL_USER=sql user
+SQL_PASS=sql password
+SQL_DB=sql database
+SQL_METADATA_CACHE_PATH=/path/to/cached/schema/json/in/container
+SQL_REQUIRED_TABLE=needed tables separated by commas, EG -> table1,table2
 ```
+
+## Assets Setup
+
+1. Create an `assets` folder in the project root if it doesn't exist:
+```bash
+mkdir -p assets
+```
+
+2. If you have a cached SQL database schema, place it in the assets folder as `schema_cache.json`. This file should match the path specified in `SQL_METADATA_CACHE_PATH` environment variable. The schema cache helps optimize SQL query performance and is required for SQL-related features.
 
 ## Installation and Running
 
@@ -127,6 +154,26 @@ curl -X POST "http://localhost:8700/api/v1/query" \
            "collection": "my_collection",
            "top_k": 3,
            "use_local_embedding": false
+         }'
+```
+
+### SQL Query Endpoint
+```http
+POST /api/v1/sql/query
+
+{
+    "message": "Your natural language query",
+    "use_cache": true
+}
+```
+
+Example using curl:
+```bash
+curl -X POST "http://localhost:8700/api/v1/sql/query" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "message": "Show me all orders from last month",
+           "use_cache": true
          }'
 ```
 
