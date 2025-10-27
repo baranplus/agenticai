@@ -23,3 +23,6 @@ langchain-openai
 langchain-text-splitters
 langsmith
 langchain-weaviate
+psycopg2-binary
+pymysql
+pyodbc
