@@ -75,5 +75,5 @@ def show_source(state : AgenticRAGState):
         result = new_answer.strip()
     else:
         result = ""
-        
+
     return {"messages": [{"role" : "user", "content" : result}]}

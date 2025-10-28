@@ -15,7 +15,7 @@ GRADE_PROMPT = (
     "Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question."
 )
 
-def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_rag", "extract_keywords", "null_response", "return_docs"]:
+def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_rag", "extract_keywords", "generate_null_answer", "return_docs"]:
 
     """Determine whether the retrieved documents are relevant to the question."""
 
@@ -35,4 +35,4 @@ def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_
         
         return "extract_keywords"
     else:
-        return "null_response"
+        return "generate_null_answer"

@@ -10,23 +10,25 @@ from .return_docs_node import return_docs
 from .sourcing_node import show_source
 from .sql_node import execute_sql
 
-def build_graph():
+## TO DO: Need to delete or properly configure external embedding
+
+# def build_graph():
     
-    graph_builder = StateGraph(AgenticRAGState)
+#     graph_builder = StateGraph(AgenticRAGState)
 
-    graph_builder.add_node(retrieve_documents)
-    graph_builder.add_node(generate_answer_agentic_rag)
-    graph_builder.add_node(extract_keywords_initial)
-    graph_builder.add_node(show_source)
+#     graph_builder.add_node(retrieve_documents)
+#     graph_builder.add_node(generate_answer_agentic_rag)
+#     graph_builder.add_node(extract_keywords_initial)
+#     graph_builder.add_node(show_source)
 
-    graph_builder.add_edge(START, "retrieve_documents")
-    graph_builder.add_conditional_edges("retrieve_documents", grade_documents)
-    graph_builder.add_edge("extract_keywords_initial", "retrieve_documents")
-    graph_builder.add_edge("generate_answer_agentic_rag", "show_source")
-    graph_builder.add_edge("show_source", END)
-    graph = graph_builder.compile()
+#     graph_builder.add_edge(START, "retrieve_documents")
+#     graph_builder.add_conditional_edges("retrieve_documents", grade_documents)
+#     graph_builder.add_edge("extract_keywords_initial", "retrieve_documents")
+#     graph_builder.add_edge("generate_answer_agentic_rag", "show_source")
+#     graph_builder.add_edge("show_source", END)
+#     graph = graph_builder.compile()
 
-    return graph
+#     return graph
 
 def build_graph_agentic_rag_local_embedding():
     
@@ -48,10 +50,10 @@ def build_graph_agentic_rag_local_embedding():
     graph_builder.add_conditional_edges(START, grade_query)
     graph_builder.add_edge("generate_intial_answer", END)
     graph_builder.add_edge("extract_keywords_initial", "retrieve_documents_use_weaviate_embedding")
-    # Either extract_keywords, null_response, return_docs, generate_answer_agentic_rag
+    # Either extract_keywords, generate_null_answer, return_docs, generate_answer_agentic_rag
     graph_builder.add_conditional_edges("retrieve_documents_use_weaviate_embedding", grade_documents)
     graph_builder.add_edge("extract_keywords", "retrieve_documents_use_weaviate_embedding")
-    graph_builder.add_edge("null_response", END)
+    graph_builder.add_edge("generate_null_answer", END)
     graph_builder.add_edge("return_docs", END)
     graph_builder.add_edge("generate_answer_agentic_rag", "show_source")
     graph_builder.add_edge("show_source", END)
