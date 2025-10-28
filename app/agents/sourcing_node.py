@@ -71,7 +71,9 @@ def show_source(state : AgenticRAGState):
         download_link = f"[{filename}]({download_url})"
         new_answer += f"{superscript} {download_link}\n"
 
-    return {
-        "messages": [{"role" : "user", "content" : new_answer.strip()}], 
-        "has_sources": has_sources
-    }
+    if has_sources:
+        result = new_answer.strip()
+    else:
+        result = ""
+        
+    return {"messages": [{"role" : "user", "content" : result}]}

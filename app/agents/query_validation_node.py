@@ -14,7 +14,7 @@ GRADE_PROMPT = (
     "Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question."
 )
 
-def grade_documents(state: AgenticRAGState) -> Literal["extract_keywords_initial", "initial_response_generation"]:
+def grade_query(state: AgenticRAGState) -> Literal["extract_keywords_initial", "initial_response_generation"]:
 
     """Determine whether initial user query is releated to domain."""
 

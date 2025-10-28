@@ -35,7 +35,7 @@ async def query(request: AgenticRAGQueryRequest):
             "sourcing" : {},
             "collection_name" : request.collection,
             "top_k" : request.top_k,
-            "has_sources": False
+            "return_docs": request.return_docs,
         }
 
         if request.use_local_embedding:
@@ -43,9 +43,7 @@ async def query(request: AgenticRAGQueryRequest):
         else:
             response = agentic_graph.invoke(init_state)
 
-        if response["has_sources"]:
-            return response["messages"][-1].content
-        return Response(content="", status_code=status.HTTP_201_CREATED)
+        return Response(content=response["messages"][-1].content, status_code=status.HTTP_201_CREATED)
         
     except Exception as e:
         error = traceback.format_exc()

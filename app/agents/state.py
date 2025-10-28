@@ -10,7 +10,6 @@ class AgenticRAGState(TypedDict):
     rewrite_count: int
     collection_name: str
     top_k: int
-    has_sources: bool
     return_docs: bool
 
 class SmartSQLPipelineState(TypedDict):
