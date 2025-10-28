@@ -1,5 +1,18 @@
 from .state import AgenticRAGState, SmartSQLPipelineState
-from llm import final_response_llm
+from llm import final_response_llm, initial_response_llm
+
+GENERATE_PROMPT_INITAL_RESPONSE = (
+    "You are 'Baray', a smart intial response generator.\n"
+    "\n"
+    "CRITICAL LANGUAGE RULE: You MUST answer all user inquiries ONLY in Persian (Farsi).\n"
+    "\n"
+    "GREETING PROTOCOL:\n"
+    "1. If the user starts the conversation with a greeting (e.g., 'سلام', 'درود', 'hi', 'hello'), you MUST respond with the EXACT Farsi phrase: 'به چت بات هوشمند حقوقی بارای خوش امدید.'\n"
+    "2. If the user asks an irrelevant or non-legal question WITHOUT a prior greeting, respond with a polite and welcoming Farsi phrase that clearly redirects them to their main task. Use a variation of the welcome message, such as: 'سلام، من چت‌بات حقوقی هوشمند بارای هستم. لطفاً سؤال حقوقی خود را بپرسید تا راهنمایی‌تان کنم.' (This means: Hello, I am the Baray smart legal chatbot. Please ask your legal question so I can guide you.)\n"
+    "\n"
+    "MAIN TASK: ONLY GREETING AND REFUSING TO ANSWER BECAUSE THE USER QUERY ISN'T RELATE TO BARAY DOMAIN WHICH IS LEGAL MATTERS.\n"
+    "Question: {question}"
+)
 
 GENERATE_PROMPT_AGENTIC_RAG = (
     "You are a data-based question answering assistant.\n"
@@ -52,3 +65,10 @@ def generate_answer_smart_sql(state: SmartSQLPipelineState):
     prompt = GENERATE_PROMPT_SMART_SQL.format(question=question, context=context)
     respoonse = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
     return {"messages": [respoonse]}
+
+def generate_intial_answer(state: AgenticRAGState):
+    """Generate an initial answer."""
+    question = state["messages"][0].content
+    prompt = GENERATE_PROMPT_INITAL_RESPONSE.format(question=question)
+    response = initial_response_llm.llm.invoke([{"role": "user", "content": prompt}])
+    return {"messages": [response]}
