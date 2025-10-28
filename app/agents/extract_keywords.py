@@ -1,5 +1,5 @@
 from .state import AgenticRAGState
-from llm import generation_model
+from llm import final_response_llm
 
 from utils.logger import logger
 
@@ -56,7 +56,7 @@ def extract_keywords_initial(state: AgenticRAGState):
     """Rewrite the original user question."""
     question = state["messages"][-2].content
     prompt = EXTRACT_KEYWORDS_INITIAL_PROMPT.format(question=question)
-    response = generation_model.llm.invoke([{"role": "user", "content": prompt}])
+    response = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
     logger.info(response.content)
     return {
         "messages": [{"role": "user", "content": response.content}],
@@ -68,7 +68,7 @@ def extract_keywords(state: AgenticRAGState):
     question = state["messages"][-2].content
     previous_keywords = state["messages"][-1].content
     prompt = EXTRACT_KEYWORDS_PROMPT.format(question=question, previous_keywords=previous_keywords)
-    response = generation_model.llm.invoke([{"role": "user", "content": prompt}])
+    response = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
     logger.info(response.content)
     return {
         "messages": [{"role": "user", "content": response.content}],

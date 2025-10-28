@@ -1,5 +1,7 @@
 from .model import LLM, Embeddings
 
 embedding_func = Embeddings()
-grader_model = LLM(temperature=0)
-generation_model = LLM(temperature=0.1)
+
+validation_llm = LLM(temperature=0)
+final_response_llm = LLM(temperature=0)
+initial_response_llm = LLM(temperature=0.4)

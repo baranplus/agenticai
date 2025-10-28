@@ -2,7 +2,7 @@ import re
 
 from .state import SmartSQLPipelineState
 from db import sql_manager
-from llm import grader_model
+from llm import validation_llm
 from utils.logger import logger
 
 PERSIAN_SQL_PROMPT = (
@@ -27,7 +27,7 @@ def generate_sql(question: str) -> str:
     schema = sql_manager.get_combined_schema()
     prompt = PERSIAN_SQL_PROMPT.format(question=question, schema=schema)
 
-    response = grader_model.llm.invoke([{"role": "user", "content": prompt}])
+    response = validation_llm.llm.invoke([{"role": "user", "content": prompt}])
 
     sql_query = response.content.strip()
     sql_query = clean_sql(sql_query)

@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, ValidationError
 from typing import Literal
 
 from .state import AgenticRAGState
-from llm import grader_model
+from llm import validation_llm
 
 MAX_RETRY_NUMBER_FOR_AGENTS = int(os.environ.get("MAX_RETRY_NUMBER_FOR_AGENTS", 2 ))
 
@@ -41,7 +41,7 @@ def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_
         context = state["messages"][-1].content
 
         prompt = GRADE_PROMPT.format(question=question, context=context)
-        response = grader_model.llm.invoke([{"role": "user", "content": prompt}])
+        response = validation_llm.llm.invoke([{"role": "user", "content": prompt}])
         parsed_response = safe_parse_grade(response.content)
         score = parsed_response.binary_score
         if score == "yes":

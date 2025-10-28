@@ -1,5 +1,5 @@
 from .state import AgenticRAGState, SmartSQLPipelineState
-from llm import generation_model
+from llm import final_response_llm
 
 GENERATE_PROMPT_AGENTIC_RAG = (
     "You are a data-based question answering assistant.\n"
@@ -42,7 +42,7 @@ def generate_answer_agentic_rag(state: AgenticRAGState):
     question = state["messages"][0].content
     context, sourcing  = augment_context(state)
     prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
-    response = generation_model.llm.invoke([{"role": "user", "content": prompt}])
+    response = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
     return {"messages": [response], "rewrite_count" : state["rewrite_count"], "docs" : state["docs"], "sourcing" : sourcing}
 
 def generate_answer_smart_sql(state: SmartSQLPipelineState):
@@ -50,5 +50,5 @@ def generate_answer_smart_sql(state: SmartSQLPipelineState):
     question = state["messages"][0].content
     context = state["messages"][-1].content
     prompt = GENERATE_PROMPT_SMART_SQL.format(question=question, context=context)
-    respoonse = generation_model.llm.invoke([{"role": "user", "content": prompt}])
+    respoonse = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
     return {"messages": [respoonse]}
