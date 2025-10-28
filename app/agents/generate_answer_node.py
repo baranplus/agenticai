@@ -72,3 +72,7 @@ def generate_intial_answer(state: AgenticRAGState):
     prompt = GENERATE_PROMPT_INITAL_RESPONSE.format(question=question)
     response = initial_response_llm.llm.invoke([{"role": "user", "content": prompt}])
     return {"messages": [response]}
+
+def generate_null_answer(state: AgenticRAGState):
+    """Generate a null answer."""
+    return {"messages": [{"role": "user", "content": ""}]}
