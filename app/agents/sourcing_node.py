@@ -52,6 +52,7 @@ def show_source(state : AgenticRAGState):
     sourcing = state["sourcing"]
 
     new_answer, source_matching = prettify_sources(answer, sourcing)
+    has_sources = bool(source_matching)
     new_answer += "\n\nSources:\n"
 
     for superscript, integer in source_matching.items():
@@ -62,4 +63,7 @@ def show_source(state : AgenticRAGState):
         download_link = f"[{filename}]({download_url})"
         new_answer += f"{superscript} {download_link}\n"
 
-    return {"messages": [{"role" : "user", "content" : new_answer.strip()}], "rewrite_count" : state["rewrite_count"], "docs" : state["docs"], "sourcing" : state["sourcing"]}
+    return {
+        "messages": [{"role" : "user", "content" : new_answer.strip()}], 
+        "has_sources": has_sources
+    }

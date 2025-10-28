@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import Response
 from langchain_core.messages import HumanMessage
 import traceback
 
@@ -16,7 +17,7 @@ agentic_graph = build_graph()
 agentic_graph_local_embedding = build_graph_agentic_rag_local_embedding()
 
 
-@router.post("/query", response_model=GeneralResponse)
+@router.post("/query")
 async def query(request: AgenticRAGQueryRequest):
 
     if not check_collection_existence(weaviate_client, request.collection):
@@ -33,7 +34,8 @@ async def query(request: AgenticRAGQueryRequest):
             "docs" : [],
             "sourcing" : {},
             "collection_name" : request.collection,
-            "top_k" : request.top_k
+            "top_k" : request.top_k,
+            "has_sources": False
         }
 
         if request.use_local_embedding:
@@ -41,9 +43,9 @@ async def query(request: AgenticRAGQueryRequest):
         else:
             response = agentic_graph.invoke(init_state)
 
-        return GeneralResponse(
-            message=response["messages"][-1].content,
-        )
+        if response["has_sources"]:
+            return response["messages"][-1].content
+        return Response(content="", status_code=status.HTTP_201_CREATED)
         
     except Exception as e:
         error = traceback.format_exc()

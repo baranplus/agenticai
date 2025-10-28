@@ -12,7 +12,7 @@ router = APIRouter()
 
 smart_sql_graph = build_graph_smart_sql()
 
-@router.post("/query", response_model=GeneralResponse)
+@router.post("/query")
 async def query(request: GeneralQueryRequest):
 
     try:
@@ -22,9 +22,7 @@ async def query(request: GeneralQueryRequest):
 
         response = smart_sql_graph.invoke(init_state)
 
-        return GeneralResponse(
-            message=response["messages"][-1].content,
-        )
+        return response["messages"][-1].content
         
     except Exception as e:
         error = traceback.format_exc()

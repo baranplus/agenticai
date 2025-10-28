@@ -10,6 +10,7 @@ class AgenticRAGState(TypedDict):
     rewrite_count: int
     collection_name: str
     top_k: int
+    has_sources: bool
 
 class SmartSQLPipelineState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
