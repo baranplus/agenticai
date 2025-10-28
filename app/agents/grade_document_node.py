@@ -5,7 +5,7 @@ from typing import Literal
 from .state import AgenticRAGState
 from llm import grader_model
 
-MAX_RETRY_NUMBER_FOR_AGENTS = int(os.environ.get("MAX_RETRY_NUMBER_FOR_AGENTS", 3 ))
+MAX_RETRY_NUMBER_FOR_AGENTS = int(os.environ.get("MAX_RETRY_NUMBER_FOR_AGENTS", 2 ))
 
 GRADE_PROMPT = (
     "You are a grader assessing relevance of a retrieved document to a user question. \n "
