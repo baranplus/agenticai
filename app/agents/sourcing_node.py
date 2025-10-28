@@ -3,6 +3,7 @@ import urllib.parse
 import os
 
 from .state import AgenticRAGState
+from utils.logger import logger
 
 SOURCE_DOWNLOAD_API_PATH_BASE = os.environ.get('SOURCE_DOWNLOAD_API_PATH_BASE')
 
@@ -18,9 +19,17 @@ def prettify_sources(text, sourcing):
     pattern = r"\*\*\((\d+)\)\*\*"
     matches = re.findall(pattern, text)
     integers = list(map(int, matches))
+    valid_integers = [idx for idx in integers if idx in sourcing]
+
+    # First remove invalid references
+    replaced_text = text
+    for match in matches:
+        idx = int(match)
+        if idx not in sourcing:
+            replaced_text = replaced_text.replace(f" **({match})**", "", 1)
     
     filename_to_indices = {}
-    for idx in integers:
+    for idx in valid_integers:
         source_name = sourcing[idx]["source"]
         if source_name not in filename_to_indices:
             filename_to_indices[source_name] = []
@@ -34,8 +43,7 @@ def prettify_sources(text, sourcing):
             superscript_map[idx] = superscript
         i += 1
     
-    replaced_text = text
-    for i, old_value in enumerate(matches):
+    for i, old_value in enumerate(valid_integers):
         new_value = superscript_map[int(old_value)]
         replaced_text = replaced_text.replace(f" **({old_value})**", new_value, 1)
     
