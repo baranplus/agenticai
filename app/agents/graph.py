@@ -3,7 +3,7 @@ from langgraph.graph import StateGraph, START, END
 from .state import AgenticRAGState, SmartSQLPipelineState
 from .retriever_node import retrieve_documents, retrieve_documents_use_weaviate_embedding
 from .grade_document_node import grade_documents
-from .extract_keywords import extract_keywords_initial
+from .extract_keywords_node import extract_keywords_initial
 from .generate_answer_node import generate_answer_agentic_rag, generate_answer_smart_sql
 from .sql_node import execute_sql
 from .sourcing_node import show_source

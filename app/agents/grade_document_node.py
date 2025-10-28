@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, ValidationError
 from typing import Literal
 
 from .state import AgenticRAGState
+from .helper_classes import safe_parse_grade
 from llm import validation_llm
 
 MAX_RETRY_NUMBER_FOR_AGENTS = int(os.environ.get("MAX_RETRY_NUMBER_FOR_AGENTS", 2 ))
@@ -14,23 +15,6 @@ GRADE_PROMPT = (
     "If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n"
     "Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question."
 )
-
-class GradeDocuments(BaseModel):
-    """Grade documents using a binary score for relevance check."""
-
-    binary_score: str = Field(
-        description="Relevance score: 'yes' if relevant, or 'no' if not relevant"
-    )
-
-def safe_parse_grade(response_text: str) -> GradeDocuments:
-    try:
-        
-        return GradeDocuments.model_validate_json(response_text)
-    except Exception:
-        
-        if "yes" in response_text.lower():
-            return GradeDocuments(binary_score="yes")
-        return GradeDocuments(binary_score="no")
 
 def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_rag", "rewrite_question"]:
 
