@@ -11,6 +11,7 @@ class AgenticRAGState(TypedDict):
     collection_name: str
     top_k: int
     has_sources: bool
+    return_docs: bool
 
 class SmartSQLPipelineState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]

@@ -65,8 +65,8 @@ def extract_keywords_initial(state: AgenticRAGState):
 
 def extract_keywords(state: AgenticRAGState):
     """Rewrite the original user question."""
-    question = state["messages"][-2].content
-    previous_keywords = state["messages"][-1].content
+    question = state["messages"][0].content
+    previous_keywords = state["messages"][-2].content
     prompt = EXTRACT_KEYWORDS_PROMPT.format(question=question, previous_keywords=previous_keywords)
     response = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
     logger.info(response.content)

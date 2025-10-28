@@ -56,7 +56,7 @@ def generate_answer_agentic_rag(state: AgenticRAGState):
     context, sourcing  = augment_context(state)
     prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
     response = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
-    return {"messages": [response], "rewrite_count" : state["rewrite_count"], "docs" : state["docs"], "sourcing" : sourcing}
+    return {"messages": [response], "sourcing" : sourcing}
 
 def generate_answer_smart_sql(state: SmartSQLPipelineState):
     """Generate an answer"""

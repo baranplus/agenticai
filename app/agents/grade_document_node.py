@@ -1,5 +1,4 @@
 import os
-from pydantic import BaseModel, Field, ValidationError
 from typing import Literal
 
 from .state import AgenticRAGState
@@ -16,7 +15,7 @@ GRADE_PROMPT = (
     "Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question."
 )
 
-def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_rag", "rewrite_question"]:
+def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_rag", "extract_keywords", "null_response", "return_docs"]:
 
     """Determine whether the retrieved documents are relevant to the question."""
 
@@ -28,9 +27,12 @@ def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_
         response = validation_llm.llm.invoke([{"role": "user", "content": prompt}])
         parsed_response = safe_parse_grade(response.content)
         score = parsed_response.binary_score
-        if score == "yes":
+
+        if score == "yes" and state["return_docs"]:
+            return "return_docs"
+        if score == "yes" and not state["return_docs"]:
             return "generate_answer_agentic_rag"
-        else:
-            return "rewrite_question"
+        
+        return "extract_keywords"
     else:
-        return "generate_answer_agentic_rag"
+        return "null_response"

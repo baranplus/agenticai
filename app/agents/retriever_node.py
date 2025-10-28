@@ -70,4 +70,4 @@ def retrieve_documents_use_weaviate_embedding(state : AgenticRAGState) -> str:
     docs = convert_weaviate_objects_to_langchain_docs(response.objects)
     results = "\n".join(doc.page_content for doc in docs)
 
-    return {"messages": [{"role" : "user", "content" : results}], "rewrite_count" : state["rewrite_count"], "docs" : docs, "sourcing" : state["sourcing"]}
+    return {"messages": [{"role" : "user", "content" : results}], "docs" : docs}
