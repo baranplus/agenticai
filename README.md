@@ -18,6 +18,11 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
 - Docker containerization for easy deployment
 - Authentication for data stores
 - SQL schema caching for optimized query performance
+- Interactive Weaviate UI for:
+  - Visual exploration of document collections
+  - Advanced hybrid search capabilities
+  - Source-based filtering and statistics
+  - Document content and metadata viewing
 
 ## Prerequisites
 
@@ -52,6 +57,10 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
 │   └── utils/          # Utility functions
 ├── assets/            # Required folder for SQL schema cache
 │   └── schema_cache.json  # SQL database schema cache
+├── weaviate_ui/       # Interactive UI for Weaviate
+│   ├── app.py         # Streamlit application
+│   ├── Dockerfile     # UI service container
+│   └── requirements.txt # UI dependencies
 ├── docker-compose.yaml
 ├── Dockerfile.Base
 └── requirements.txt
@@ -64,7 +73,9 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
 ```env
 # Docker Services
 APP_IMAGE=agentic_rag:1.0.0
+WEAVIATE_UI_IMAGE=weaviate_ui:1.0.0
 APP_PORT=8700
+WEAVIATE_UI_PORT=8501
 
 # LLM Configuration
 API_KEY=your_api_key
@@ -113,6 +124,9 @@ mkdir -p assets
 ```bash
 # Build the FastAPI application image
 docker build -t agentic_rag:1.0.0 -f Dockerfile.Base .
+
+# Build the Weaviate UI image
+docker build -t weaviate_ui:1.0.0 -f weaviate_ui/Dockerfile weaviate_ui
 ```
 
 2. Start the services using Docker Compose:
@@ -130,6 +144,7 @@ docker-compose down
 3. The services will be available at:
    - FastAPI application: http://host:8700
    - Weaviate: http://host:8500
+   - Weaviate UI: http://host:8501 (A user-friendly interface for searching and analyzing Weaviate collections)
 
 ## API Usage
 
