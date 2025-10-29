@@ -43,3 +43,28 @@ services:
                 "1"
             ]
         restart: always
+
+    weaviate-ui:
+        image: ${WEAVIATE_UI_IMAGE}
+        build:
+            context: ./weaviate_ui
+            dockerfile: Dockerfile
+        container_name: weaviate_ui
+        ports:
+            - "${WEAVIATE_UI_PORT}:8501"
+        environment:
+            - WEAVIATE_HOST=${WEAVIATE_HOST}
+            - WEAVIATE_PORT=${WEAVIATE_PORT}
+            - WEAVIATE_USER_KEY=${WEAVIATE_USER_KEY}
+            - HYBRID_SEARCH_ALPHA=${HYBRID_SEARCH_ALPHA}
+        volumes:
+            - ./weaviate_ui/app.py:/app/app.py
+        command: 
+            [
+                "streamlit",
+                "run",
+                "app.py",
+                "--server.port=8501",
+                "--server.address=0.0.0.0",
+            ]
+        restart: unless-stopped
