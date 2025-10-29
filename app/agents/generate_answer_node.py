@@ -1,5 +1,6 @@
 from .state import AgenticRAGState, SmartSQLPipelineState
 from llm import final_response_llm, initial_response_llm
+from utils.logger import logger
 
 GENERATE_PROMPT_INITAL_RESPONSE = (
     "You are 'Baray', a smart intial response generator.\n"
@@ -33,7 +34,8 @@ GENERATE_PROMPT_SMART_SQL = (
     "You are a specialized question answering assistant that exclusively analyzes SQL query results.\n"
     "You only base your answers on the specific SQL data (rows and fields) provided to you along with the question.\n"
     "You are given a question and a set of data rows derived from SQL query results (rows or fields) to help you answer the question.\n"
-    "If the information provided thorough Context isn't enough to answer, just say only the following failure message in persian : 'اطلاعات کافی برای پاسخ وجود ندارد'.\n"
+    # "If the information provided thorough Context isn't enough to answer, just say only the following failure message in persian : 'اطلاعات کافی برای پاسخ وجود ندارد'.\n"
+    "If the information provided thorough Context isn't enough to answer, just describe the the provided data to you. in case no context is provided say you don't have enough information to answer the question"
     "Critical: The answer should be written in persian (Farsi) only and not in english."
     "Question: {question} \n"
     "Context: {context}"
@@ -62,6 +64,7 @@ def generate_answer_smart_sql(state: SmartSQLPipelineState):
     """Generate an answer"""
     question = state["messages"][0].content
     context = state["messages"][-1].content
+    logger.info(f"------\n\n{context}\n\n------------")
     prompt = GENERATE_PROMPT_SMART_SQL.format(question=question, context=context)
     respoonse = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
     return {"messages": [respoonse]}
