@@ -6,13 +6,22 @@ from .helper_classes import safe_parse_grade
 from llm import validation_llm
 
 GRADE_PROMPT = (
-    "You are a grador assessing relevance of a user question to following domains. \n "
-    "Domains:\n\n"
-    "شهرداری, شهرسازی ,  قوانین کشوری و شهری, قوانین شهرداری, ماده صد, ماده هشتاد, قوانین حقوقی, حقوق, قانون\n"
-    "به طور کلی تمام موضوعات مربوط به قوانین و حقوقی کشور جمهوری اسلامی ایران و مخصوصا قوانین مرتبط با شهرداری و ایین نامه های مربوط به آن در خصوص شهرسازی پهنه های مجاز و .... رای گیری شکایات و تعرفه های وکالت و قضات و پروانه های کسب و موضوعات قانونی ... موضوعات درست هستند\n\n"
-    "Here is the user question: {question} \n"
-    "If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n"
-    "Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question."
+    "You are a grader responsible for evaluating whether a user question is relevant to the specified domains.\n\n"
+    "Domains:\n"
+    "شهرداری، شهرسازی، قوانین کشوری و شهری، قوانین شهرداری، ماده صد، ماده هشتاد، "
+    "قوانین حقوقی، حقوق، قانون، کمیسیون‌های شهرداری، کمیسیون‌های مجلس، "
+    "شوراهای اسلامی، مجلس، شکایت، وکالت، قضاوت، سازمان‌های جمهوری اسلامی، "
+    "قوانین جمهوری اسلامی ایران و آیین‌نامه‌های مرتبط با آنها.\n\n"
+    "به طور کلی هر موضوعی که به قوانین و مقررات جمهوری اسلامی ایران مربوط باشد، "
+    "به‌ویژه در زمینه‌های حقوقی، شهری، شهرداری، شهرسازی، پهنه‌بندی، آیین‌نامه‌ها، "
+    "رأی‌گیری، شکایات، تعرفه‌های وکالت و قضاوت، پروانه‌های کسب و سایر موضوعات قانونی، "
+    "مرتبط محسوب می‌شود.\n\n"
+    "User question:\n"
+    "{question}\n\n"
+    "If the question contains keywords or conveys semantic meaning related to any of the above domains, "
+    "respond with a single word:\n"
+    "- 'yes' → if it is relevant\n"
+    "- 'no' → if it is not relevant."
 )
 
 def grade_query(state: AgenticRAGState) -> Literal["extract_keywords_initial", "generate_intial_answer"]:
