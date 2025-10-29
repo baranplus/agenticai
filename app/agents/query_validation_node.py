@@ -9,7 +9,7 @@ GRADE_PROMPT = (
     "You are a grador assessing relevance of a user question to following domains. \n "
     "Domains:\n\n"
     "شهرداری, شهرسازی ,  قوانین کشوری و شهری, قوانین شهرداری, ماده صد, ماده هشتاد, قوانین حقوقی, حقوق, قانون\n"
-    "به طور کلی تمام موضوعات مربوط به قوانین و حقوقی کشور جمهوری اسلامی ایران و مخصوصا قوانین مرتبط با شهرداری و ایین نامه های مربوط به آن در خصوص شهرسازی پهنه های مجاز و .... رای گیری شکایات و ... موضوعات درست هستند\n\n"
+    "به طور کلی تمام موضوعات مربوط به قوانین و حقوقی کشور جمهوری اسلامی ایران و مخصوصا قوانین مرتبط با شهرداری و ایین نامه های مربوط به آن در خصوص شهرسازی پهنه های مجاز و .... رای گیری شکایات و تعرفه های وکالت و قضات و پروانه های کسب و موضوعات قانونی ... موضوعات درست هستند\n\n"
     "Here is the user question: {question} \n"
     "If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n"
     "Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question."
