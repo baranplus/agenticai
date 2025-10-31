@@ -30,6 +30,8 @@ def grade_query(state: AgenticRAGState) -> Literal["extract_keywords_initial", "
 
     """Determine whether initial user query is releated to domain."""
 
+    return "extract_keywords_initial"
+
     question = state["messages"][0].content
 
     prompt = GRADE_PROMPT.format(question=question)
