@@ -8,9 +8,6 @@ from utils.logger import logger
 PERSIAN_SQL_PROMPT = (
     "You are a SQL expert. Given an input question in Persian, first understand the intent,"
     "then create a SQL query in T-SQL format for microsoft my sql server that answers the question.\n"
-    "If previously extracted data is presents use them as part of your query.\n"
-    "Previously Extracted Data:\n"
-    "{previous_data}\n"
     "Schema information:\n"
     "{schema}\n"
     "Core Table Definitions\n"
@@ -58,11 +55,11 @@ def clean_sql(sql: str) -> str:
     # Remove Markdown code fences like ```sql ... ```
     return re.sub(r"^```(?:sql)?|```$", "", sql.strip(), flags=re.MULTILINE).strip()
 
-def generate_sql(question: str, previous_data : str = None) -> str:
+def generate_sql(question: str) -> str:
     """Generate SQL query from Persian question"""
 
     schema = sql_manager.get_combined_schema()
-    prompt = PERSIAN_SQL_PROMPT.format(question=question, schema=schema, previous_data=previous_data)
+    prompt = PERSIAN_SQL_PROMPT.format(question=question, schema=schema)
 
     response = validation_llm.llm.invoke([{"role": "user", "content": prompt}])
 
@@ -78,16 +75,18 @@ def execute_sql(state: SmartSQLPipelineState) -> str:
 
     question = state["messages"][-1].content
 
-    result = ""
+    for _ in range(2):
+        result = ""
+        try:
+            sql_query = generate_sql(question)
+            extracted_data = sql_manager.execute_sql(sql_query)
 
-    for _ in range(1):
-
-        sql_query = generate_sql(question, result)
-        extracted_data = sql_manager.execute_sql(sql_query)
-
-        for row in extracted_data:
-            for key in row.keys():
-                result += f"{key}: {row[key]}"
-            result += "\n"
+            for row in extracted_data:
+                for key in row.keys():
+                    result += f"{key}: {row[key]}"
+                result += "\n"
+            break
+        except Exception as e:
+            logger.info(f"Sql error : {str(e)}")
 
     return {"messages": [{"role": "user", "content": result}]}
