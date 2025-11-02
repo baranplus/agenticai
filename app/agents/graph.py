@@ -40,7 +40,7 @@ def build_graph_agentic_rag_local_embedding():
     graph_builder.add_node(generate_answer_agentic_rag)
     graph_builder.add_node(generate_answer_smart_sql)
     graph_builder.add_node(extract_keywords_initial)
-    graph_builder.add_node(extract_keywords)
+    # graph_builder.add_node(extract_keywords)
     graph_builder.add_node(retrieve_documents_use_weaviate_embedding)
     graph_builder.add_node(grade_documents)
     graph_builder.add_node(return_docs)
@@ -52,7 +52,7 @@ def build_graph_agentic_rag_local_embedding():
     graph_builder.add_edge("extract_keywords_initial", "retrieve_documents_use_weaviate_embedding")
     # Either extract_keywords, generate_null_answer, return_docs, generate_answer_agentic_rag
     graph_builder.add_conditional_edges("retrieve_documents_use_weaviate_embedding", grade_documents)
-    graph_builder.add_edge("extract_keywords", "retrieve_documents_use_weaviate_embedding")
+    # graph_builder.add_edge("extract_keywords", "retrieve_documents_use_weaviate_embedding")
     graph_builder.add_edge("generate_null_answer", END)
     graph_builder.add_edge("return_docs", END)
     graph_builder.add_edge("generate_answer_agentic_rag", "show_source")
