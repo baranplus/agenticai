@@ -61,7 +61,6 @@ class MongoDBManager:
     def get_file_source(self, db_name : str, file_name : str, collection_name : str = "source_files") -> Tuple[str, BytesIO]:
         collection = self.get_mongodb_collection(db_name, collection_name)
         document = collection.find_one({"filename": file_name})
-    
         if document is None:
             raise FileNotFoundError(f"File '{file_name}' not found.")
 

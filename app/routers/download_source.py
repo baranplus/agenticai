@@ -10,14 +10,14 @@ from utils.logger import logger
 router = APIRouter()
 
 @router.get("/download/{db_name}/{filename}")
-async def query(db_name : str, filename: str):
+async def download(db_name : str, filename: str):
     """
     Retrieves a file from MongoDB based on the filename 
     and streams it back to the user.
     """
-    file_size, content_stream = mongodb_manager.get_file_source(db_name, filename)
 
     try:
+        file_size, content_stream = mongodb_manager.get_file_source(db_name, filename, "source_files")
         def file_iterator():
             chunk_size = 4096
             while True:

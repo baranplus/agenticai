@@ -1,6 +1,6 @@
 import os
 
-from .client import get_weaviate_client, get_mongodb_client
+from .client import get_weaviate_client
 from .sql_client import SQLDatabaseManager
 from .mongodb_client import MongoDBManager
 
