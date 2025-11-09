@@ -1,6 +1,5 @@
 import os
 from langchain_openai import ChatOpenAI
-from langchain_openai import OpenAIEmbeddings
 
 from utils.logger import logger
 
@@ -21,17 +20,4 @@ class LLM:
             )
         except Exception as e:
             logger.error(f"Error initializing LLM: {e}")
-            raise
-
-class Embeddings:
-
-    def __init__(self):
-        try:
-            self.embeddings_model = OpenAIEmbeddings(
-                api_key=API_KEY,
-                base_url=BASE_URL,
-                model=EMBEDDING_MODEL
-            )
-        except Exception as e:
-            logger.error(f"Error initializing Embeddings: {e}")
             raise

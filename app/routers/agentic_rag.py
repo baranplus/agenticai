@@ -49,10 +49,8 @@ async def query(request: AgenticRAGQueryRequest):
             "mongodb_text_collection" : request.mongodb_text_collection
         }
 
-        if request.use_local_embedding:
-            response = agentic_graph_local_embedding.invoke(init_state)
-        else:
-            return Response(content="Use local embedding for now", status_code=status.HTTP_401_UNAUTHORIZED)
+        response = agentic_graph_local_embedding.invoke(init_state)
+
 
         return Response(content=response["messages"][-1].content, status_code=status.HTTP_201_CREATED)
         
