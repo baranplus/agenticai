@@ -4,33 +4,20 @@ import urllib
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from db import mongodb_source_files_collection
+from db import mongodb_manager
 from utils.logger import logger
 
 router = APIRouter()
 
-@router.get("/download/{filename}")
-async def query(filename: str):
+@router.get("/download/{db_name}/{filename}")
+async def query(db_name : str, filename: str):
     """
     Retrieves a file from MongoDB based on the filename 
     and streams it back to the user.
     """
-    
-    if mongodb_source_files_collection == None:
-        raise HTTPException(status_code=503, detail="Database service is unavailable.")
-    
+    file_size, content_stream = mongodb_manager.get_file_source(db_name, filename)
+
     try:
-        document = mongodb_source_files_collection.find_one({"filename": filename})
-    
-        if document is None:
-            raise HTTPException(status_code=404, detail=f"File '{filename}' not found.")
-
-        content = document.get('content')
-        if not content:
-            raise HTTPException(status_code=404, detail=f"Content not found for file '{filename}'")
-
-        content_stream = io.BytesIO(content)
-
         def file_iterator():
             chunk_size = 4096
             while True:
@@ -52,7 +39,7 @@ async def query(filename: str):
 
         headers = {
             'Content-Disposition': f'attachment;  filename*=UTF-8\'\'{encoded_filename}',
-            'Content-Length': str(document.get('file_size', 0))
+            'Content-Length': file_size
         }
 
         return StreamingResponse(
