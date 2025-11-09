@@ -7,7 +7,7 @@ from schema.request import AgenticRAGQueryRequest
 from schema.response import GeneralResponse
 from agents.graph import build_graph_agentic_rag_local_embedding
 from db.collection import check_collection_existence
-from db import weaviate_client
+from db import weaviate_client, mongodb_manager
 
 from utils.logger import logger
 
@@ -26,6 +26,14 @@ async def query(request: AgenticRAGQueryRequest):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Collection '{request.collection}' not found in the database."
         )
+    
+    if not mongodb_manager.check_db_existence(request.mongodb_db) or \
+        not mongodb_manager.check_collection_existence(request.mongodb_db, request.mongodb_text_collection) or \
+        not mongodb_manager.check_collection_existence(request.mongodb_db, request.mongodb_source_collection):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Database '{request.mongodb_db}' or Collections '{request.mongodb_source_collection}', '{request.mongodb_text_collection}' not found in the database."
+        )
 
     try:
         init_state = {
@@ -36,6 +44,9 @@ async def query(request: AgenticRAGQueryRequest):
             "collection_name" : request.collection,
             "top_k" : request.top_k,
             "return_docs": request.return_docs,
+            "mongodb_db" : request.mongodb_db,
+            "mongodb_source_collection" : request.mongodb_source_collection,
+            "mongodb_text_collection" : request.mongodb_text_collection
         }
 
         if request.use_local_embedding:
