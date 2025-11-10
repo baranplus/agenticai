@@ -5,6 +5,7 @@ from typing import Annotated, TypedDict
 
 class AgenticRAGState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
+    answers: list[BaseMessage]
     docs: list[Document]
     sourcing: dict
     rewrite_count: int

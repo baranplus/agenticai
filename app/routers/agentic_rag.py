@@ -38,6 +38,7 @@ async def query(request: AgenticRAGQueryRequest):
     try:
         init_state = {
             "messages": [HumanMessage(content=request.message)],
+            "answers" : [],
             "rewrite_count" : 0, 
             "docs" : [],
             "sourcing" : {},

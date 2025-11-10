@@ -57,7 +57,10 @@ def convert_mongodb_raw_docs_to_langchain_document(raw_docs : List[Dict[str, Any
 
         for key, value in obj.items():
             if key != "content":
-                metadata[key] = value
+                if key == "filename":
+                    metadata["source"] = value
+                else:
+                    metadata[key] = value
 
         metadata["uuid"] = str(obj.get("_id"))
 
@@ -194,4 +197,4 @@ def retrieve_documents(state : AgenticRAGState) -> str:
     results_vector = "\n".join(doc.page_content for doc in final_docs)
     results_text = "\n".join(doc.page_content for doc in final_mongodb_docs)
 
-    return {"messages": [{"role" : "user", "content" : [results_vector, results_text]}], "docs" : [final_docs, results_text]}
+    return {"messages": [{"role" : "user", "content" : [results_vector, results_text]}], "docs" : [final_docs, final_mongodb_docs]}

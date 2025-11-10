@@ -1,3 +1,4 @@
+from langchain.schema import AIMessage
 from .state import AgenticRAGState, SmartSQLPipelineState
 from llm import final_response_llm, initial_response_llm
 from utils.logger import logger
@@ -41,12 +42,10 @@ GENERATE_PROMPT_SMART_SQL = (
     "Context: {context}"
 )
 
-def augment_context(input_dict):
+def augment_context(docs):
 
-    docs = input_dict["docs"]
     context = ""
     sourcing = {}
-
     for i, doc in enumerate(docs):
         sourcing[i+1] = {"text" : doc.page_content, **doc.metadata}
         context += f"Snippet {i+1} : {doc.page_content} <end_of_snippet>\n"
@@ -54,11 +53,19 @@ def augment_context(input_dict):
 
 def generate_answer_agentic_rag(state: AgenticRAGState):
     """Generate an answer."""
+
     question = state["messages"][0].content
-    context, sourcing  = augment_context(state)
-    prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
-    response = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
-    return {"messages": [response], "sourcing" : sourcing}
+
+    context_vector, sourcing_vector  = augment_context(state["docs"][0])
+    context_text, sourcing_text  = augment_context(state["docs"][1])
+
+    prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context_vector)
+    response_vector = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
+
+    prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context_text)
+    response_text = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
+
+    return {"messages": [response_vector,response_text], "answers" : [response_vector,response_text], "sourcing" : [sourcing_vector, sourcing_text]}
 
 def generate_answer_smart_sql(state: SmartSQLPipelineState):
     """Generate an answer"""
