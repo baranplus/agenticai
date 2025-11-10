@@ -25,11 +25,11 @@ def build_graph_agentic_rag_local_embedding():
     graph_builder.add_node(return_docs)
     graph_builder.add_node(show_source)
 
-    # Either generate_intial_answer, extract_keywords_initial
+    # Either extract_keywords_initial
     graph_builder.add_conditional_edges(START, grade_query)
     graph_builder.add_edge("generate_intial_answer", END)
     graph_builder.add_edge("extract_keywords_initial", "retrieve_documents")
-    # Either extract_keywords, generate_null_answer, return_docs, generate_answer_agentic_rag
+    # Either generate_null_answer, return_docs, generate_answer_agentic_rag
     graph_builder.add_conditional_edges("retrieve_documents", grade_documents)
     graph_builder.add_edge("generate_null_answer", END)
     graph_builder.add_edge("return_docs", END)

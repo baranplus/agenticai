@@ -5,8 +5,6 @@ from pymongo.database import Database as MongoDBDatabase
 from pymongo.collection import Collection as MongoDBCollection
 from typing import List, Dict, Any, Tuple
 
-from utils.logger import logger
-
 class MongoDBManager:
 
     """
@@ -31,7 +29,6 @@ class MongoDBManager:
 
     def check_db_existence(self, db_name : str) -> bool:
         db_list = self.client.list_database_names()
-        logger.info(db_list)
         if db_name not in db_list:
             return False
         return True
@@ -44,7 +41,6 @@ class MongoDBManager:
     def check_collection_existence(self, db_name : str, collection_name : str) -> bool:
         db = self.get_mongodb_db(db_name)
         collection_list = db.list_collection_names()
-        logger.info(collection_list)
         if collection_name not in collection_list:
             return False
         return True
