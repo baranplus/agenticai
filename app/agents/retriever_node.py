@@ -7,7 +7,7 @@ from weaviate.collections.classes.internal import Object as WeaviateObject
 from typing import List, Iterable
 
 from .state import AgenticRAGState
-from db import weaviate_client
+from db import weaviate_client, mongodb_manager
 from utils.logger import logger
 
 HYBRID_SEARCH_ALPHA = float(os.environ.get("HYBRID_SEARCH_ALPHA"))

@@ -1,8 +1,11 @@
+import gridfs
 from io import BytesIO
 from pymongo import MongoClient
 from pymongo.database import Database as MongoDBDatabase
 from pymongo.collection import Collection as MongoDBCollection
 from typing import List, Dict, Any, Tuple
+
+from utils.logger import logger
 
 class MongoDBManager:
 
@@ -12,13 +15,12 @@ class MongoDBManager:
     - Download files from db
     """
 
-    def __init__(self, host : str, user : str, password : str, auth_db : str):
+    def __init__(self, host : str, user : str, password : str):
 
         self.client = MongoClient(
             host=host,
             username=user,
             password=password,
-            authSource=auth_db
         )
 
         if not self.client.admin.command('ping').get("ok") == 1:
@@ -29,6 +31,7 @@ class MongoDBManager:
 
     def check_db_existence(self, db_name : str) -> bool:
         db_list = self.client.list_database_names()
+        logger.info(db_list)
         if db_name not in db_list:
             return False
         return True
@@ -41,6 +44,7 @@ class MongoDBManager:
     def check_collection_existence(self, db_name : str, collection_name : str) -> bool:
         db = self.get_mongodb_db(db_name)
         collection_list = db.list_collection_names()
+        logger.info(collection_list)
         if collection_name not in collection_list:
             return False
         return True
@@ -58,18 +62,29 @@ class MongoDBManager:
 
         return found_docs
     
-    def get_file_source(self, db_name : str, file_name : str, collection_name : str = "source_files") -> Tuple[str, BytesIO]:
+    def get_file_source(self, db_name: str, file_name: str, collection_name: str = "source_files") -> Tuple[str, BytesIO]:
         collection = self.get_mongodb_collection(db_name, collection_name)
+        
         document = collection.find_one({"filename": file_name})
         if document is None:
             raise FileNotFoundError(f"File '{file_name}' not found.")
 
-        content = document.get('content')
+        file_id = document.get("gridfs_id")
+        if not file_id:
+            raise FileNotFoundError(f"GridFS ID missing for file '{file_name}'")
 
-        if not content:
-            raise FileNotFoundError(f"Content not found for file '{file_name}'")
+        # Open GridFS bucket
+        db = self.get_mongodb_db(db_name)
+        fs = gridfs.GridFS(db)
 
-        content_stream = BytesIO(content)
-        file_size = str(document.get('file_size', 0))
+        try:
+            grid_out = fs.get(file_id)
+        except Exception:
+            raise FileNotFoundError(f"File data not found in GridFS for '{file_name}'")
 
-        return (file_size, content_stream)
+        file_bytes = grid_out.read()
+        content_stream = BytesIO(file_bytes)
+
+        file_size = str(document.get("file_size", len(file_bytes)))
+
+        return file_size, content_stream
