@@ -4,6 +4,7 @@ import random
 from collections import Counter
 from langchain.schema import Document
 from weaviate.collections.classes.internal import Object as WeaviateObject
+from weaviate.classes.query import Filter
 from typing import List, Iterable, Dict, Any
 
 from .state import AgenticRAGState
@@ -150,6 +151,8 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 
+    source_name = "KMC-J7.pdf"
+
     collection = weaviate_client.collections.get(state["collection_name"])
     query = state["messages"][-1].content
     initial_question = state["messages"][0].content
@@ -168,14 +171,18 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     for keyword in keywords:
 
-        mongo_docs_raw = mongodb_manager.full_text_search(state["mongodb_db"], state["mongodb_text_collection"], keyword, state["top_k"])
+        mongo_docs_raw = mongodb_manager.full_text_search(state["mongodb_db"], state["mongodb_text_collection"], keyword, source_name, state["top_k"])
     
         try:
             response = collection.query.hybrid(
                 query=keyword, 
                 limit=state["top_k"], 
                 alpha=HYBRID_SEARCH_ALPHA,
-                target_vector="keywords_vector"
+                target_vector="keywords_vector",
+                query_properties=["content", "source", "keywords^2"],
+                filters=(
+                    Filter.by_property("source").equal(source_name)
+                )
             )
         except Exception as e:
             logger.info("Searing with keywords failed, switching to content vector")
@@ -183,7 +190,10 @@ def retrieve_documents(state : AgenticRAGState) -> str:
                 query=keyword, 
                 limit=state["top_k"], 
                 alpha=HYBRID_SEARCH_ALPHA,
-                target_vector="content_vector"
+                target_vector="content_vector",
+                filters=(
+                    Filter.by_property("source").equal(source_name)
+                )
             )
 
         docs = convert_weaviate_objects_to_langchain_docs(response.objects)

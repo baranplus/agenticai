@@ -45,10 +45,10 @@ class MongoDBManager:
             return False
         return True
     
-    def full_text_search(self, db_name : str, collection_name : str, query : str, top_k : int = 100) -> List[Dict[str, Any]]:
+    def full_text_search(self, db_name : str, collection_name : str, query : str, source : str, top_k : int = 100) -> List[Dict[str, Any]]:
         collection = self.get_mongodb_collection(db_name, collection_name)
         cursor = collection.find(
-            {"$text": {"$search": query}},
+            {"$text": {"$search": query}, "filename": source},
             {"score": {"$meta": "textScore"}}
         ).sort([("score", {"$meta": "textScore"})]).limit(top_k)
 
