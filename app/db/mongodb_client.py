@@ -3,7 +3,7 @@ from io import BytesIO
 from pymongo import MongoClient
 from pymongo.database import Database as MongoDBDatabase
 from pymongo.collection import Collection as MongoDBCollection
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 
 class MongoDBManager:
 
@@ -45,10 +45,15 @@ class MongoDBManager:
             return False
         return True
     
-    def full_text_search(self, db_name : str, collection_name : str, query : str, source : str, top_k : int = 100) -> List[Dict[str, Any]]:
+    def full_text_search(self, db_name : str, collection_name : str, query : str, source : Optional[str] = None, top_k : int = 100) -> List[Dict[str, Any]]:
+        search_query = {"$text": {"$search": query}}
+        if source:
+            search_query["filename"] = source
+
+
         collection = self.get_mongodb_collection(db_name, collection_name)
         cursor = collection.find(
-            {"$text": {"$search": query}, "filename": source},
+            search_query,
             {"score": {"$meta": "textScore"}}
         ).sort([("score", {"$meta": "textScore"})]).limit(top_k)
 

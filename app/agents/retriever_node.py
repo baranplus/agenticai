@@ -151,7 +151,7 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 
-    source_name = "KMC-J7.pdf"
+    source_name = None
 
     collection = weaviate_client.collections.get(state["collection_name"])
     query = state["messages"][-1].content
@@ -171,30 +171,24 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     for keyword in keywords:
 
-        mongo_docs_raw = mongodb_manager.full_text_search(state["mongodb_db"], state["mongodb_text_collection"], keyword, source_name, state["top_k"])
+        mongo_docs_raw = mongodb_manager.full_text_search(state["mongodb_db"], state["mongodb_text_collection"], keyword, top_k=state["top_k"])
+
+        query_params = {
+            "query": keyword,
+            "limit": state["top_k"],
+            "alpha": HYBRID_SEARCH_ALPHA,
+            "target_vector": "keywords_vector",
+        }
     
+        if source_name:
+            query_params["filters"] = Filter.by_property("source").equal(source_name)
+
         try:
-            response = collection.query.hybrid(
-                query=keyword, 
-                limit=state["top_k"], 
-                alpha=HYBRID_SEARCH_ALPHA,
-                target_vector="keywords_vector",
-                query_properties=["content", "source", "keywords^2"],
-                filters=(
-                    Filter.by_property("source").equal(source_name)
-                )
-            )
+            response = collection.query.hybrid(**query_params)
         except Exception as e:
             logger.info("Searing with keywords failed, switching to content vector")
-            response = collection.query.hybrid(
-                query=keyword, 
-                limit=state["top_k"], 
-                alpha=HYBRID_SEARCH_ALPHA,
-                target_vector="content_vector",
-                filters=(
-                    Filter.by_property("source").equal(source_name)
-                )
-            )
+            query_params["target_vector"] = "content_vector"
+            response = collection.query.hybrid(**query_params)
 
         docs = convert_weaviate_objects_to_langchain_docs(response.objects)
         mongo_docs = convert_mongodb_raw_docs_to_langchain_document(mongo_docs_raw)
