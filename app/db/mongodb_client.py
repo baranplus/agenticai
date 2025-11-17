@@ -86,6 +86,7 @@ class MongoDBManager:
         file_bytes = grid_out.read()
         content_stream = BytesIO(file_bytes)
 
-        file_size = str(document.get("file_size", len(file_bytes)))
+        # file_size = str(document.get("file_size", len(file_bytes)))
+        file_size = str(len(file_bytes))
 
         return file_size, content_stream
