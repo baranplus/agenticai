@@ -13,37 +13,6 @@ from utils.logger import logger
 
 HYBRID_SEARCH_ALPHA = float(os.environ.get("HYBRID_SEARCH_ALPHA"))
 
-def convert_weaviate_objects_to_langchain_docs(weaviate_objects: List[WeaviateObject]) -> List[Document]:
-    """
-    Converts a list of Weaviate Object instances into a list of LangChain Document objects.
-    """
-    langchain_docs = []
-
-    for obj in weaviate_objects:
-
-        page_content = obj.properties.get("content", "")
-
-        metadata = {}
-
-        for key, value in obj.properties.items():
-            if key != "content":
-                metadata[key] = value
-
-        metadata["weaviate_uuid"] = str(obj.uuid)
-
-        if obj.metadata and obj.metadata.distance is not None:
-            metadata["distance"] = obj.metadata.distance
-        if obj.metadata and obj.metadata.score is not None:
-            metadata["score"] = obj.metadata.score
-
-        doc = Document(
-            page_content=page_content,
-            metadata=metadata
-        )
-        langchain_docs.append(doc)
-
-    return langchain_docs
-
 def convert_mongodb_raw_docs_to_langchain_document(raw_docs : List[Dict[str, Any]])-> List[Document]:
     """
     Converts a list of MongoDB Raw Dics instances into a list of LangChain Document objects.
@@ -153,7 +122,6 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     source_name = None
 
-    collection = weaviate_client.collections.get(state["collection_name"])
     query = state["messages"][-1].content
     initial_question = state["messages"][0].content
 
@@ -184,15 +152,14 @@ def retrieve_documents(state : AgenticRAGState) -> str:
             query_params["filters"] = Filter.by_property("source").equal(source_name)
 
         try:
-            response = collection.query.hybrid(**query_params)
+            response = weaviate_client.query_params(state["collection_name"], query_params)
         except Exception as e:
             logger.info("Searing with keywords failed, switching to content vector")
             query_params["target_vector"] = "content_vector"
-            response = collection.query.hybrid(**query_params)
+            response = weaviate_client.query_params(state["collection_name"], query_params)
 
-        docs = convert_weaviate_objects_to_langchain_docs(response.objects)
         mongo_docs = convert_mongodb_raw_docs_to_langchain_document(mongo_docs_raw)
-        aggregated_docs_vector.extend(docs)
+        aggregated_docs_vector.extend(response)
         aggregated_docs_text.extend(mongo_docs)
 
     final_docs = get_top_sources(aggregated_docs_vector, top_n_source=state["top_k"], top_n_uuids=state["top_k"])
