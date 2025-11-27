@@ -4,13 +4,11 @@ import random
 from collections import Counter
 from langchain.schema import Document
 from weaviate.collections.classes.internal import Object as WeaviateObject
-from weaviate.classes.query import BM25Operator
-from typing import List, Iterable, Any
+from weaviate.classes.query import Filter
+from typing import List, Iterable, Dict, Any
 
 from .state import AgenticRAGState
-from db import weaviate_client
-from db.vector_store import get_weaviate_vector_store
-from llm import embedding_func
+from db import weaviate_client, mongodb_manager
 from utils.logger import logger
 
 HYBRID_SEARCH_ALPHA = float(os.environ.get("HYBRID_SEARCH_ALPHA"))
@@ -37,6 +35,35 @@ def convert_weaviate_objects_to_langchain_docs(weaviate_objects: List[WeaviateOb
             metadata["distance"] = obj.metadata.distance
         if obj.metadata and obj.metadata.score is not None:
             metadata["score"] = obj.metadata.score
+
+        doc = Document(
+            page_content=page_content,
+            metadata=metadata
+        )
+        langchain_docs.append(doc)
+
+    return langchain_docs
+
+def convert_mongodb_raw_docs_to_langchain_document(raw_docs : List[Dict[str, Any]])-> List[Document]:
+    """
+    Converts a list of MongoDB Raw Dics instances into a list of LangChain Document objects.
+    """
+    langchain_docs = []
+
+    for obj in raw_docs:
+
+        page_content = obj.get("content", "")
+
+        metadata = {}
+
+        for key, value in obj.items():
+            if key != "content":
+                if key == "filename":
+                    metadata["source"] = value
+                else:
+                    metadata[key] = value
+
+        metadata["uuid"] = str(obj.get("_id"))
 
         doc = Document(
             page_content=page_content,
@@ -92,6 +119,9 @@ def get_top_sources(documents, top_n_source=10, top_n_uuids = 10) -> List[Docume
 
     return final_docs
 
+def sort_documents_by_score(docs : List[Document], top_k : int = 50) -> List[Document]:
+    return sorted(docs, key=lambda d: d.metadata.get("score", 0), reverse=True)[:top_k]
+
 def sample_combinations(keywords: List[str], max_samples: int = 10, seed: int | None = None,) -> Iterable[str]:
     """
     Yield a limited number of non-empty keyword combinations.
@@ -121,17 +151,7 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 
-    weaviate_vector_store = get_weaviate_vector_store(weaviate_client, state["collection_name"], embedding_func.embeddings_model)
-    retriever = weaviate_vector_store.as_retriever(search_kwargs={"k" : state["top_k"]})
-    query = state["messages"][-1].content
-    docs = retriever.invoke(query)
-    results = "\n".join(doc.page_content for doc in docs)
-
-    return {"messages": [{"role" : "user", "content" : results}], "rewrite_count" : state["rewrite_count"], "docs" : docs, "sourcing" : state["sourcing"]}
-
-def retrieve_documents_use_weaviate_embedding(state : AgenticRAGState) -> str:
-
-    """Query vector database. Use this for any question regarding national rules of IR"""
+    source_name = None
 
     collection = weaviate_client.collections.get(state["collection_name"])
     query = state["messages"][-1].content
@@ -141,24 +161,44 @@ def retrieve_documents_use_weaviate_embedding(state : AgenticRAGState) -> str:
 
     for combo in sample_combinations(keywords=keywords, max_samples=1):
         keywords.append(combo)
+    
     keywords.append(initial_question)
+
     logger.info(f"\n\nKeywords : {keywords}\n\n")
-    aggregated_docs = []
+
+    aggregated_docs_vector = []
+    aggregated_docs_text = []
 
     for keyword in keywords:
 
-        response = collection.query.hybrid(
-            query=keyword, 
-            limit=state["top_k"], 
-            alpha=HYBRID_SEARCH_ALPHA, 
-            # bm25_operator=BM25Operator.or_(minimum_match=2)
-        )
+        mongo_docs_raw = mongodb_manager.full_text_search(state["mongodb_db"], state["mongodb_text_collection"], keyword, top_k=state["top_k"])
+
+        query_params = {
+            "query": keyword,
+            "limit": state["top_k"],
+            "alpha": HYBRID_SEARCH_ALPHA,
+            "target_vector": "keywords_vector",
+        }
+    
+        if source_name:
+            query_params["filters"] = Filter.by_property("source").equal(source_name)
+
+        try:
+            response = collection.query.hybrid(**query_params)
+        except Exception as e:
+            logger.info("Searing with keywords failed, switching to content vector")
+            query_params["target_vector"] = "content_vector"
+            response = collection.query.hybrid(**query_params)
 
         docs = convert_weaviate_objects_to_langchain_docs(response.objects)
-        aggregated_docs.extend(docs)
+        mongo_docs = convert_mongodb_raw_docs_to_langchain_document(mongo_docs_raw)
+        aggregated_docs_vector.extend(docs)
+        aggregated_docs_text.extend(mongo_docs)
 
-    final_docs = get_top_sources(aggregated_docs, top_n_source=state["top_k"], top_n_uuids=state["top_k"])
+    final_docs = get_top_sources(aggregated_docs_vector, top_n_source=state["top_k"], top_n_uuids=state["top_k"])
+    final_mongodb_docs = sort_documents_by_score(aggregated_docs_text, state["top_k"])
 
-    results = "\n".join(doc.page_content for doc in final_docs)
+    results_vector = "\n".join(doc.page_content for doc in final_docs)
+    results_text = "\n".join(doc.page_content for doc in final_mongodb_docs)
 
-    return {"messages": [{"role" : "user", "content" : results}], "docs" : final_docs}
+    return {"messages": [{"role" : "user", "content" : [results_vector, results_text]}], "docs" : [final_docs, final_mongodb_docs]}

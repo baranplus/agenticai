@@ -1,7 +1,5 @@
 import os
-from .model import LLM, Embeddings
-
-embedding_func = Embeddings()
+from .model import LLM
 
 SQL_GENERATION_MODEL = os.environ.get("SQL_GENERATION_MODEL")
 

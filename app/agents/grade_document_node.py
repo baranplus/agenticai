@@ -18,15 +18,26 @@ def grade_documents(state: AgenticRAGState) -> Literal["generate_answer_agentic_
     """Determine whether the retrieved documents are relevant to the question."""
 
     question = state["messages"][0].content
-    context = state["messages"][-1].content
+    context_vector = state["messages"][-1].content[0]
+    context_text = state["messages"][-1].content[1]
 
-    prompt = GRADE_PROMPT.format(question=question, context=context)
-    response = validation_llm.llm.invoke([{"role": "user", "content": prompt}])
-    parsed_response = safe_parse_grade(response.content)
-    score = parsed_response.binary_score
+    prompt = GRADE_PROMPT.format(question=question, context=context_vector)
+    response_vector = validation_llm.llm.invoke([{"role": "user", "content": prompt}])
 
-    if score == "yes" and state["return_docs"]:
+    prompt = GRADE_PROMPT.format(question=question, context=context_text)
+    response_text = validation_llm.llm.invoke([{"role": "user", "content": prompt}])
+
+    parsed_response_vector = safe_parse_grade(response_vector.content)
+    parsed_response_text = safe_parse_grade(response_text.content)
+
+    score_vector = parsed_response_vector.binary_score
+    score_text = parsed_response_text.binary_score
+
+    from utils.logger import logger
+    logger.info(f"Score Vetor : {score_vector} -------- Score Text : {score_text}")
+
+    if (score_vector == "yes" or score_text == "yes") and state["return_docs"]:
         return "return_docs"
-    if score == "yes" and not state["return_docs"]:
+    if (score_vector == "yes" or score_text == "yes") and not state["return_docs"]:
         return "generate_answer_agentic_rag"
     return "generate_null_answer"

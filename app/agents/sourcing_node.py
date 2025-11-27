@@ -55,10 +55,7 @@ def prettify_sources(text, sourcing):
     
     return replaced_text, superscript_to_old
 
-def show_source(state : AgenticRAGState):
-    answer = state["messages"][-1].content
-    sourcing = state["sourcing"]
-
+def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
     new_answer, source_matching = prettify_sources(answer, sourcing)
     has_sources = bool(source_matching)
     new_answer += "\n\nSources:\n"
@@ -67,7 +64,7 @@ def show_source(state : AgenticRAGState):
         src_meta = sourcing[integer]
         filename = src_meta["source"]
         encoded_filename = urllib.parse.quote(filename)
-        download_url = f"{SOURCE_DOWNLOAD_API_PATH_BASE}/{encoded_filename}"
+        download_url = f"{SOURCE_DOWNLOAD_API_PATH_BASE}/{mongodb_db}/{mongodb_collection}/{encoded_filename}"
         download_link = f"[{filename}]({download_url})"
         new_answer += f"{superscript} {download_link}\n"
 
@@ -75,5 +72,16 @@ def show_source(state : AgenticRAGState):
         result = new_answer.strip()
     else:
         result = ""
+    return result
 
-    return {"messages": [{"role" : "user", "content" : result}]}
+def show_source(state : AgenticRAGState):
+    answer_vector = state["answers"][0].content
+    sourcing_vector = state["sourcing"][0]
+
+    answer_text = state["answers"][1].content
+    sourcing_text = state["sourcing"][1]
+
+    result_vector = concatenate_answer(answer_vector, sourcing_vector, state["mongodb_db"], state["mongodb_source_collection"])
+    result_text = concatenate_answer(answer_text, sourcing_text, state["mongodb_db"], state["mongodb_source_collection"])
+
+    return {"messages": [{"role" : "user", "content" : f"Vector Search :\n{result_vector}\n\nFull-Text Search :\n{result_text}"}]}
