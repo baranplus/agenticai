@@ -29,8 +29,8 @@ class SQLDatabaseManager:
         self.cache_path = cache_path
         self.required_tables = required_tables
         self.table_schemas = {}
-        self.initialize_metadata()
-        self.load_schemas()
+        # self.initialize_metadata()
+        # self.load_schemas()
 
     def initialize_metadata(self):
         """

@@ -187,9 +187,6 @@ def retrieve_documents(state : AgenticRAGState) -> str:
     final_docs = get_top_sources(aggregated_docs_vector, top_n_source=state["top_k"], top_n_uuids=state["top_k"])
     final_mongodb_docs = sort_documents_by_score(aggregated_docs_text, state["top_k"])
 
-    logger.info(final_docs)
-    logger.info(final_mongodb_docs)
-
     results_vector = "\n".join(doc.page_content for doc in final_docs)
     results_text = "\n".join(doc.page_content for doc in final_mongodb_docs)
 
