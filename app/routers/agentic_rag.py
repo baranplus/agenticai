@@ -4,10 +4,8 @@ from langchain_core.messages import HumanMessage
 import traceback
 
 from schema.request import AgenticRAGQueryRequest
-from schema.response import GeneralResponse
 from agents.graph import build_graph_agentic_rag_local_embedding
-from db.collection import check_collection_existence
-from db import weaviate_client, mongodb_manager
+from db import weaviate_client, mongodb_manager, weaviate_client
 
 from utils.logger import logger
 
@@ -20,7 +18,7 @@ agentic_graph_local_embedding = build_graph_agentic_rag_local_embedding()
 @router.post("/query")
 async def query(request: AgenticRAGQueryRequest):
 
-    if not check_collection_existence(weaviate_client, request.collection):
+    if not weaviate_client.check_collection_existence(request.collection):
         
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
