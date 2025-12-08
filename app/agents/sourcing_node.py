@@ -136,4 +136,4 @@ def show_source(state : AgenticRAGState):
     result_vector = concatenate_answer_new(answer_vector, sourcing_vector, state["mongodb_db"], source_collection)
     result_text = concatenate_answer_new(answer_text, sourcing_text, state["mongodb_db"], source_collection)
 
-    return {"messages": [{"role" : "user", "content" : f"Vector Search :\n{result_vector}\n\nFull-Text Search :\n{result_text}"}]}
+    return {"messages": [{"role" : "user", "content" : f"{result_vector}\n\n{result_text}"}]}
