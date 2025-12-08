@@ -133,3 +133,28 @@ class MongoDBManager:
         file_size = str(len(file_bytes))
 
         return file_size, content_stream
+
+    def get_pdf_page(self, db_name: str, fileId: str, chunk_index : int, collection_name: str = "file_documents") -> Tuple[str, BytesIO]:
+
+        collection = self.get_mongodb_collection(db_name, collection_name)
+        # fileId = ObjectId(fileId)
+        # NEW SCHEMA: match file by its filename field
+        document = collection.find_one({"fileId": fileId, "chunk_index": chunk_index})
+        if document is None:
+            raise FileNotFoundError(f"File '{fileId}' not found.")
+
+        # NEW SCHEMA: originalBuffer contains BASE64 string
+        base64_data = document.get("originalBuffer")
+        if not base64_data:
+            raise FileNotFoundError(f"No binary data found for '{fileId}'")
+
+        try:
+            file_bytes = base64.b64decode(base64_data)
+        except Exception:
+            raise FileNotFoundError("originalBuffer is not valid base64")
+
+        content_stream = BytesIO(file_bytes)
+
+        file_size = str(len(file_bytes))
+
+        return file_size, content_stream

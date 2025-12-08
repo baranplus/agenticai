@@ -19,10 +19,14 @@ SQL_DB = os.environ.get("SQL_DB")
 SQL_METADATA_CACHE_PATH = os.environ.get("SQL_METADATA_CACHE_PATH")
 SQL_REQUIRED_TABLE = os.environ.get("SQL_REQUIRED_TABLE")
 
+API_KEY = os.environ.get("API_KEY")
+BASE_URL = os.environ.get("BASE_URL")
+
 SQL_CONNECTION_URI = f"mssql+pyodbc://{SQL_USER}:{SQL_PASS}@{SQL_HOST}:{SQL_PORT}/{SQL_DB}?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=no"
 
 sql_required_tables = [table.strip() for table in SQL_REQUIRED_TABLE.split(",") if table.strip()]
 
-weaviate_client = WeaviateClientManager(WEAVIATE_HOST, WEAVIATE_PORT, WEAVIATE_USER_KEY, HYBRID_SEARCH_ALPHA)
+headers = {"X-OpenAI-Api-Key": API_KEY, "X-OpenRouter-Api-Key": API_KEY, "X-OpenAI-Baseurl" : BASE_URL}
+weaviate_client = WeaviateClientManager(WEAVIATE_HOST, WEAVIATE_PORT, WEAVIATE_USER_KEY, headers, HYBRID_SEARCH_ALPHA)
 sql_manager = SQLDatabaseManager(SQL_CONNECTION_URI, sql_required_tables, SQL_METADATA_CACHE_PATH)
 mongodb_manager = MongoDBManager(MONGODB_URI, MONGO_INITDB_DEV_USERNAME, MONGO_INITDB_DEV_PASSWORD)

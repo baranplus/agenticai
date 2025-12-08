@@ -63,8 +63,10 @@ def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
     for superscript, integer in source_matching.items():
         src_meta = sourcing[integer]
         filename = src_meta["source"]
+        file_id = src_meta.get("fileId")
+        chunk_index = src_meta.get("chunk_index")
         encoded_filename = urllib.parse.quote(filename)
-        download_url = f"{SOURCE_DOWNLOAD_API_PATH_BASE}/{mongodb_db}/{mongodb_collection}/{encoded_filename}"
+        download_url = f"{SOURCE_DOWNLOAD_API_PATH_BASE}/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{chunk_index}"
         download_link = f"[{filename}]({download_url})"
         new_answer += f"{superscript} {download_link}\n"
 
@@ -81,7 +83,10 @@ def show_source(state : AgenticRAGState):
     answer_text = state["answers"][1].content
     sourcing_text = state["sourcing"][1]
 
-    result_vector = concatenate_answer(answer_vector, sourcing_vector, state["mongodb_db"], state["mongodb_source_collection"])
-    result_text = concatenate_answer(answer_text, sourcing_text, state["mongodb_db"], state["mongodb_source_collection"])
+    # source_collection = state["mongodb_source_collection"]
+    source_collection = "pdf_pages"
+
+    result_vector = concatenate_answer(answer_vector, sourcing_vector, state["mongodb_db"], source_collection)
+    result_text = concatenate_answer(answer_text, sourcing_text, state["mongodb_db"], source_collection)
 
     return {"messages": [{"role" : "user", "content" : f"Vector Search :\n{result_vector}\n\nFull-Text Search :\n{result_text}"}]}

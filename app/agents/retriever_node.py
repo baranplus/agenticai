@@ -52,7 +52,7 @@ def convert_mongodb_raw_docs_to_langchain_document_new(raw_docs: List[Dict[str, 
 
         for key, value in obj.items():
             if key != "content":
-                if key == "source":  # NEW name
+                if key == "filename":  # NEW name
                     metadata["source"] = value
                 else:
                     metadata[key] = value
