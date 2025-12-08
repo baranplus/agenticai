@@ -163,7 +163,7 @@ class WeaviateClientManager:
 
         params["return_metadata"] = MetadataQuery(score=True, explain_score=True)
         params["bm25_operator"] = BM25Operator.or_(minimum_match=2)
-        params["vector"] = openrouter_embedding_request(params["query"])
+        params["vector"] = avval_embedding_request(params["query"])
         response =  collection.query.hybrid(**params)
 
         return self._processing_query_returns(response.objects)
@@ -216,6 +216,22 @@ def openrouter_embedding_request(text: str):
             "model": "openai/text-embedding-3-large",
             "input": text,
             "encoding_format": "float"
+        })
+    )
+
+    response.raise_for_status()
+    return response.json()["data"][0]["embedding"]
+
+def avval_embedding_request(text: str):
+    response = requests.post(
+        url="https://api.avalai.ir/v1/embeddings",
+        headers={
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json",
+        },
+        data=json.dumps({
+            "model": "text-embedding-3-large",
+            "input": text,
         })
     )
 
