@@ -4,7 +4,7 @@ from io import BytesIO
 from pymongo import MongoClient
 from pymongo.database import Database as MongoDBDatabase
 from pymongo.collection import Collection as MongoDBCollection
-from typing import List, Dict, Any, Tuple, Optional
+from typing import List, Dict, Any, Tuple, Optional, Set
 
 class MongoDBManager:
 
@@ -158,3 +158,29 @@ class MongoDBManager:
         file_size = str(len(file_bytes))
 
         return file_size, content_stream
+
+    def get_all_unique_filenames(self, db_name: str, collection_name: str = "file_documents", processing_status: Optional[str] = None) -> Set[str]:
+
+        collection = self.get_mongodb_collection(db_name, collection_name)
+
+        match_filter: Dict[str, Any] = {
+            "filename": {"$exists": True, "$ne": None, "$ne": ""}
+        }
+        if processing_status:
+            match_filter["processingStatus"] = processing_status
+
+        pipeline = [
+            {"$match": match_filter},
+            {"$group": {
+                "_id": None,
+                "uniqueFilenames": {"$addToSet": "$filename"}
+            }},
+            {"$project": {"_id": 0, "uniqueFilenames": 1}}
+        ]
+
+        result = list(collection.aggregate(pipeline))
+
+        if not result or 'uniqueFilenames' not in result[0]:
+            return set()
+
+        return set(result[0]['uniqueFilenames'])

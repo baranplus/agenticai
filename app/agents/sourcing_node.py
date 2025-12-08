@@ -55,6 +55,33 @@ def prettify_sources(text, sourcing):
     
     return replaced_text, superscript_to_old
 
+def prettify_sources_new(text, sourcing):
+    pattern = r"\*\*\((\d+)\)\*\*"
+    matches = re.findall(pattern, text)
+    integers = list(map(int, matches))
+    valid_integers = [idx for idx in integers if idx in sourcing]
+
+    # Remove invalid references
+    replaced_text = text
+    for match in matches:
+        idx = int(match)
+        if idx not in sourcing:
+            replaced_text = replaced_text.replace(f" **({match})**", "", 1)
+
+    # DO NOT deduplicate — keep original indices
+    # Replace **(1)** with ¹, **(2)** with ², etc., one by one
+    for idx in valid_integers:
+        superscript = int_to_superscript(idx)  # idx starts from ? usually 1
+        replaced_text = replaced_text.replace(f" **({idx})**", superscript, 1)
+
+    # Return mapping: superscript → original index (for sourcing list)
+    superscript_to_idx = {}
+    for idx in valid_integers:
+        superscript = int_to_superscript(idx)
+        superscript_to_idx[superscript] = idx
+
+    return replaced_text, superscript_to_idx
+
 def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
     new_answer, source_matching = prettify_sources(answer, sourcing)
     has_sources = bool(source_matching)
@@ -76,6 +103,26 @@ def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
         result = ""
     return result
 
+def concatenate_answer_new(answer, sourcing, mongodb_db, mongodb_collection):
+    new_answer, source_matching = prettify_sources_new(answer, sourcing)
+    has_sources = bool(source_matching)
+    new_answer += "\n\nSources:\n"
+
+    # Sort by superscript order (¹, ², ³...) for clean output
+    sorted_items = sorted(source_matching.items(), key=lambda x: superscript_to_int(x[0]))
+
+    for superscript, idx in sorted_items:
+        src_meta = sourcing[idx]
+        filename = src_meta["source"]
+        file_id = src_meta.get("fileId")
+        chunk_index = src_meta.get("chunk_index", 0)
+        encoded_filename = urllib.parse.quote(filename)
+        download_url = f"{SOURCE_DOWNLOAD_API_PATH_BASE}/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{chunk_index}"
+        download_link = f"[{filename}]({download_url})"
+        new_answer += f"{superscript} {download_link}\n"
+
+    return new_answer.strip() if has_sources else ""
+
 def show_source(state : AgenticRAGState):
     answer_vector = state["answers"][0].content
     sourcing_vector = state["sourcing"][0]
@@ -86,7 +133,7 @@ def show_source(state : AgenticRAGState):
     # source_collection = state["mongodb_source_collection"]
     source_collection = "pdf_pages"
 
-    result_vector = concatenate_answer(answer_vector, sourcing_vector, state["mongodb_db"], source_collection)
-    result_text = concatenate_answer(answer_text, sourcing_text, state["mongodb_db"], source_collection)
+    result_vector = concatenate_answer_new(answer_vector, sourcing_vector, state["mongodb_db"], source_collection)
+    result_text = concatenate_answer_new(answer_text, sourcing_text, state["mongodb_db"], source_collection)
 
     return {"messages": [{"role" : "user", "content" : f"Vector Search :\n{result_vector}\n\nFull-Text Search :\n{result_text}"}]}

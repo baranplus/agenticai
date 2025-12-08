@@ -142,6 +142,8 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 
+    unique_source = mongodb_manager.get_all_unique_filenames(state["mongodb_db"], state["mongodb_source_collection"])
+    logger.info(f"Unique sources in the source collection: {unique_source}")
     source_name = None
 
     query = state["messages"][-1].content

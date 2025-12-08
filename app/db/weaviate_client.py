@@ -32,9 +32,6 @@ class WeaviateClientManager:
 
         if not self.client.is_live():
             raise ConnectionError("Can't connect to an instance of weaviate database")
-
-        meta_info = self.client.get_meta()
-        logger.info(f"Client Metadata : {meta_info}")
         
     def check_collection_existence(self, collection_name : str) -> bool:
         collection = self.client.collections.get(collection_name)
