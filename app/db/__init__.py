@@ -6,6 +6,7 @@ from .mongodb_client import MongoDBManager
 
 WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST")
 WEAVIATE_PORT = os.environ.get("WEAVIATE_PORT")
+WEAVIATE_GRPC_PORT = os.environ.get("WEAVIATE_GRPC_PORT")
 WEAVIATE_USER_KEY = os.environ.get("WEAVIATE_USER_KEY")
 HYBRID_SEARCH_ALPHA = os.environ.get("HYBRID_SEARCH_ALPHA")
 MONGODB_URI = os.environ.get("MONGODB_URI")
@@ -26,7 +27,6 @@ SQL_CONNECTION_URI = f"mssql+pyodbc://{SQL_USER}:{SQL_PASS}@{SQL_HOST}:{SQL_PORT
 
 sql_required_tables = [table.strip() for table in SQL_REQUIRED_TABLE.split(",") if table.strip()]
 
-headers = {"X-OpenAI-Api-Key": API_KEY, "X-OpenRouter-Api-Key": API_KEY, "X-OpenAI-Baseurl" : BASE_URL}
-weaviate_client = WeaviateClientManager(WEAVIATE_HOST, WEAVIATE_PORT, WEAVIATE_USER_KEY, headers, HYBRID_SEARCH_ALPHA)
+weaviate_client = WeaviateClientManager(WEAVIATE_HOST, WEAVIATE_PORT, WEAVIATE_GRPC_PORT, WEAVIATE_USER_KEY, HYBRID_SEARCH_ALPHA)
 sql_manager = SQLDatabaseManager(SQL_CONNECTION_URI, sql_required_tables, SQL_METADATA_CACHE_PATH)
 mongodb_manager = MongoDBManager(MONGODB_URI, MONGO_INITDB_DEV_USERNAME, MONGO_INITDB_DEV_PASSWORD)

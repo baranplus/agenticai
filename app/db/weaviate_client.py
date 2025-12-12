@@ -19,14 +19,13 @@ API_KEY = os.environ.get("API_KEY")
 
 class WeaviateClientManager:
 
-    def __init__(self, host: str, port: str, user_key: str, headers : Dict[str, str], alpha : float) -> None:
+    def __init__(self, host: str, port: str, grcp_port : str, user_key: str, alpha : float) -> None:
 
         self.client = weaviate.connect_to_local(
             host=host,
             port=port,
-            grpc_port=50052,
+            grpc_port=grcp_port,
             auth_credentials=Auth.api_key(user_key),
-            headers=headers
         )
         self.alpha_hybrid_search = alpha
 
@@ -179,7 +178,10 @@ class WeaviateClientManager:
 
             for key, value in obj.properties.items():
                 if key != "content":
-                    metadata[key] = value
+                    if key == "filename":
+                        metadata["source"] = value
+                    else:
+                        metadata[key] = value
 
             metadata["weaviate_uuid"] = str(obj.uuid)
 
