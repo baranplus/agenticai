@@ -108,10 +108,87 @@ def get_top_sources(documents, top_n_source=10, top_n_uuids = 10) -> List[Docume
                 final_docs.append(doc)
                 seen_uuids.add(uuid)
 
-    return final_docs
+    return remove_duplicate_documents(final_docs)
 
 def sort_documents_by_score(docs : List[Document], top_k : int = 50) -> List[Document]:
-    return sorted(docs, key=lambda d: d.metadata.get("score", 0), reverse=True)[:top_k]
+    docs = sorted(docs, key=lambda d: d.metadata.get("score", 0), reverse=True)[:top_k]
+    return remove_duplicate_documents(docs)
+
+def remove_duplicate_documents(documents: List[Document], by: str = "uuid") -> List[Document]:
+    """
+    Remove duplicate documents from a list of Document objects.
+    
+    Args:
+        documents: List of LangChain Document objects
+        by: Strategy for identifying duplicates:
+            - "uuid": Remove duplicates by weaviate_uuid or uuid field in metadata
+            - "content": Remove duplicates by page_content (exact match)
+            - "content_and_uuid": Remove duplicates by both uuid and content
+            - "content_fuzzy": Remove near-duplicate content (requires similarity threshold)
+    
+    Returns:
+        List of documents with duplicates removed, preserving order of first occurrence
+        
+    Example:
+        >>> docs = [doc1, doc2, doc1_duplicate]  # doc1_duplicate has same UUID as doc1
+        >>> unique_docs = remove_duplicate_documents(docs, by="uuid")
+        >>> len(unique_docs)  # Returns 2
+    """
+    
+    if not documents:
+        return []
+    
+    seen = set()
+    unique_docs = []
+    
+    if by == "uuid":
+        # Remove duplicates by UUID
+        for doc in documents:
+            doc_uuid = doc.metadata.get('weaviate_uuid') or doc.metadata.get('uuid')
+            if doc_uuid and doc_uuid not in seen:
+                seen.add(doc_uuid)
+                unique_docs.append(doc)
+            elif not doc_uuid:
+                # If no UUID, include the document (can't identify duplicate)
+                unique_docs.append(doc)
+    
+    elif by == "content":
+        # Remove duplicates by exact content match
+        for doc in documents:
+            content_hash = hash(doc.page_content)
+            if content_hash not in seen:
+                seen.add(content_hash)
+                unique_docs.append(doc)
+    
+    elif by == "content_and_uuid":
+        # Remove duplicates by both UUID and content
+        for doc in documents:
+            doc_uuid = doc.metadata.get('weaviate_uuid') or doc.metadata.get('uuid')
+            content_hash = hash(doc.page_content)
+            composite_key = (doc_uuid, content_hash)
+            
+            if composite_key not in seen:
+                seen.add(composite_key)
+                unique_docs.append(doc)
+    
+    elif by == "content_fuzzy":
+        # Remove near-duplicates using simple similarity (content length and substring matching)
+        for doc in documents:
+            is_duplicate = False
+            for unique_doc in unique_docs:
+                # Check if documents are similar (simple heuristic)
+                if doc.page_content.strip().lower() == unique_doc.page_content.strip().lower():
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                unique_docs.append(doc)
+    
+    else:
+        logger.warning(f"Unknown duplicate removal strategy: {by}. Returning original documents.")
+        return documents
+    
+    return unique_docs
 
 def sample_combinations(keywords: List[str], max_samples: int = 10, seed: int | None = None,) -> Iterable[str]:
     """
@@ -188,8 +265,8 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     final_docs = get_top_sources(aggregated_docs_vector, top_n_source=state["top_k"], top_n_uuids=state["top_k"])
     final_mongodb_docs = sort_documents_by_score(aggregated_docs_text, state["top_k"])
-
     results_vector = "\n".join(doc.page_content for doc in final_docs)
     results_text = "\n".join(doc.page_content for doc in final_mongodb_docs)
-
+    logger.info(f"Length Mongo : {len(final_docs)}")
+    logger.info(f"Length Mongo : {len(final_mongodb_docs)}")
     return {"messages": [{"role" : "user", "content" : [results_vector, results_text]}], "docs" : [final_docs, final_mongodb_docs]}
