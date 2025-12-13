@@ -159,7 +159,7 @@ class WeaviateClientManager:
 
         params["return_metadata"] = MetadataQuery(score=True, explain_score=True)
         params["bm25_operator"] = BM25Operator.or_(minimum_match=2)
-        params["vector"] = avval_embedding_request(params["query"])
+        params["vector"] = openrouter_embedding_request(params["query"])
         response =  collection.query.hybrid(**params)
 
         return self._processing_query_returns(response.objects)
