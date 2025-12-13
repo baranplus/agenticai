@@ -10,4 +10,4 @@ app = FastAPI(
 # Include routers
 app.include_router(agentic_rag.router, prefix="/api/v1", tags=["rag"])
 app.include_router(download_source.router, prefix="/api/v1", tags=["download", "source"])
-app.include_router(smart_sql.router, prefix="/api/v1/sql", tags=["smart", "sql"])
+# app.include_router(smart_sql.router, prefix="/api/v1/sql", tags=["smart", "sql"])

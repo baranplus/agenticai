@@ -1,3 +1,6 @@
+import os
+import requests
+import json
 import hashlib
 import uuid
 import weaviate
@@ -12,14 +15,17 @@ from typing import List, Tuple, Dict, Any
 
 from utils.logger import logger
 
+API_KEY = os.environ.get("API_KEY")
+
 class WeaviateClientManager:
 
-    def __init__(self, host: str, port: str, user_key: str, alpha : float) -> None:
+    def __init__(self, host: str, port: str, grcp_port : str, user_key: str, alpha : float) -> None:
 
         self.client = weaviate.connect_to_local(
             host=host,
             port=port,
-            auth_credentials=Auth.api_key(user_key)
+            grpc_port=grcp_port,
+            auth_credentials=Auth.api_key(user_key),
         )
         self.alpha_hybrid_search = alpha
 
@@ -153,7 +159,7 @@ class WeaviateClientManager:
 
         params["return_metadata"] = MetadataQuery(score=True, explain_score=True)
         params["bm25_operator"] = BM25Operator.or_(minimum_match=2)
-
+        params["vector"] = avval_embedding_request(params["query"])
         response =  collection.query.hybrid(**params)
 
         return self._processing_query_returns(response.objects)
@@ -172,7 +178,10 @@ class WeaviateClientManager:
 
             for key, value in obj.properties.items():
                 if key != "content":
-                    metadata[key] = value
+                    if key == "filename":
+                        metadata["source"] = value
+                    else:
+                        metadata[key] = value
 
             metadata["weaviate_uuid"] = str(obj.uuid)
 
@@ -194,3 +203,36 @@ def deterministic_uuid(source, idx, text):
     hashval = hashlib.sha1(text.encode("utf-8")).hexdigest()
     key = f"{source}-{idx}-{hashval}"
     return str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
+
+def openrouter_embedding_request(text: str):
+    response = requests.post(
+        url="https://openrouter.ai/api/v1/embeddings",
+        headers={
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json",
+        },
+        data=json.dumps({
+            "model": "openai/text-embedding-3-large",
+            "input": text,
+            "encoding_format": "float"
+        })
+    )
+
+    response.raise_for_status()
+    return response.json()["data"][0]["embedding"]
+
+def avval_embedding_request(text: str):
+    response = requests.post(
+        url="https://api.avalai.ir/v1/embeddings",
+        headers={
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json",
+        },
+        data=json.dumps({
+            "model": "text-embedding-3-large",
+            "input": text,
+        })
+    )
+
+    response.raise_for_status()
+    return response.json()["data"][0]["embedding"]

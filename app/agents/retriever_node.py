@@ -42,6 +42,28 @@ def convert_mongodb_raw_docs_to_langchain_document(raw_docs : List[Dict[str, Any
 
     return langchain_docs
 
+def convert_mongodb_raw_docs_to_langchain_document_new(raw_docs: List[Dict[str, Any]]):
+    langchain_docs = []
+
+    for obj in raw_docs:
+
+        page_content = obj.get("content", "")
+        metadata = {}
+
+        for key, value in obj.items():
+            if key != "content":
+                if key == "filename":  # NEW name
+                    metadata["source"] = value
+                else:
+                    metadata[key] = value
+
+        metadata["uuid"] = str(obj.get("_id"))
+
+        doc = Document(page_content=page_content, metadata=metadata)
+        langchain_docs.append(doc)
+
+    return langchain_docs
+
 def get_top_sources(documents, top_n_source=10, top_n_uuids = 10) -> List[Document]:
 
     """
@@ -120,6 +142,8 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 
+    unique_source = mongodb_manager.get_all_unique_filenames(state["mongodb_db"], state["mongodb_source_collection"])
+    logger.info(f"Unique sources in the source collection: {unique_source}")
     source_name = None
 
     query = state["messages"][-1].content
@@ -139,7 +163,7 @@ def retrieve_documents(state : AgenticRAGState) -> str:
 
     for keyword in keywords:
 
-        mongo_docs_raw = mongodb_manager.full_text_search(state["mongodb_db"], state["mongodb_text_collection"], keyword, top_k=state["top_k"])
+        mongo_docs_raw = mongodb_manager.full_text_search_new(state["mongodb_db"], state["mongodb_text_collection"], keyword, top_k=state["top_k"])
 
         query_params = {
             "query": keyword,
@@ -158,7 +182,7 @@ def retrieve_documents(state : AgenticRAGState) -> str:
             query_params["target_vector"] = "content_vector"
             response = weaviate_client.query_params(state["collection_name"], query_params)
 
-        mongo_docs = convert_mongodb_raw_docs_to_langchain_document(mongo_docs_raw)
+        mongo_docs = convert_mongodb_raw_docs_to_langchain_document_new(mongo_docs_raw)
         aggregated_docs_vector.extend(response)
         aggregated_docs_text.extend(mongo_docs)
 
