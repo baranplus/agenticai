@@ -16,7 +16,8 @@ from typing import List, Tuple, Dict, Any
 from utils.logger import logger
 
 API_KEY = os.environ.get("API_KEY")
-
+EMBEDDING_URL = os.environ.get("EMBEDDING_URL")
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL")
 class WeaviateClientManager:
 
     def __init__(self, host: str, port: str, grcp_port : str, user_key: str, alpha : float) -> None:
@@ -159,7 +160,7 @@ class WeaviateClientManager:
 
         params["return_metadata"] = MetadataQuery(score=True, explain_score=True)
         params["bm25_operator"] = BM25Operator.or_(minimum_match=2)
-        params["vector"] = openrouter_embedding_request(params["query"])
+        params["vector"] = embedding_request(params["query"])
         response =  collection.query.hybrid(**params)
 
         return self._processing_query_returns(response.objects)
@@ -204,32 +205,15 @@ def deterministic_uuid(source, idx, text):
     key = f"{source}-{idx}-{hashval}"
     return str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
 
-def openrouter_embedding_request(text: str):
+def embedding_request(text: str):
     response = requests.post(
-        url="https://openrouter.ai/api/v1/embeddings",
+        url=EMBEDDING_URL,
         headers={
             "Authorization": f"Bearer {API_KEY}",
             "Content-Type": "application/json",
         },
         data=json.dumps({
-            "model": "openai/text-embedding-3-large",
-            "input": text,
-            "encoding_format": "float"
-        })
-    )
-
-    response.raise_for_status()
-    return response.json()["data"][0]["embedding"]
-
-def avval_embedding_request(text: str):
-    response = requests.post(
-        url="https://api.avalai.ir/v1/embeddings",
-        headers={
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json",
-        },
-        data=json.dumps({
-            "model": "text-embedding-3-large",
+            "model": EMBEDDING_MODEL,
             "input": text,
         })
     )
