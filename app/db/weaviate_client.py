@@ -1,6 +1,3 @@
-import os
-import requests
-import json
 import weaviate
 from weaviate.collections import Collection
 from weaviate.classes.init import Auth
@@ -9,11 +6,6 @@ from weaviate.collections.classes.internal import Object as WeaviateObject
 from langchain_core.documents import Document
 from typing import List, Dict, Any
 
-from utils.logger import logger
-
-API_KEY = os.environ.get("API_KEY")
-EMBEDDING_URL = os.environ.get("EMBEDDING_URL")
-EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL")
 class WeaviateClientManager:
 
     def __init__(self, host: str, port: str, grcp_port : str, user_key: str, alpha : float) -> None:
@@ -110,19 +102,3 @@ class WeaviateClientManager:
             langchain_docs.append(doc)
 
         return langchain_docs
-
-def embedding_request(text: str):
-    response = requests.post(
-        url=EMBEDDING_URL,
-        headers={
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json",
-        },
-        data=json.dumps({
-            "model": EMBEDDING_MODEL,
-            "input": text,
-        })
-    )
-
-    response.raise_for_status()
-    return response.json()["data"][0]["embedding"]
