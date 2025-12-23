@@ -1,32 +1,38 @@
-import os
-
 from .weaviate_client import WeaviateClientManager
 from .sql_client import SQLDatabaseManager
 from .mongodb_client import MongoDBManager
+from configs.env_configs import env_config
 
-WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST")
-WEAVIATE_PORT = os.environ.get("WEAVIATE_PORT")
-WEAVIATE_GRPC_PORT = os.environ.get("WEAVIATE_GRPC_PORT")
-WEAVIATE_USER_KEY = os.environ.get("WEAVIATE_USER_KEY")
-HYBRID_SEARCH_ALPHA = os.environ.get("HYBRID_SEARCH_ALPHA")
-MONGODB_URI = os.environ.get("MONGODB_URI")
-MONGO_INITDB_DEV_USERNAME = os.environ.get("MONGO_INITDB_DEV_USERNAME")
-MONGO_INITDB_DEV_PASSWORD = os.environ.get("MONGO_INITDB_DEV_PASSWORD")
-SQL_HOST = os.environ.get("SQL_HOST")
-SQL_PORT = os.environ.get("SQL_PORT")
-SQL_USER = os.environ.get("SQL_USER")
-SQL_PASS = os.environ.get("SQL_PASS")
-SQL_DB = os.environ.get("SQL_DB")
-SQL_METADATA_CACHE_PATH = os.environ.get("SQL_METADATA_CACHE_PATH")
-SQL_REQUIRED_TABLE = os.environ.get("SQL_REQUIRED_TABLE")
+SQL_CONNECTION_URI = f"mssql+pyodbc://{env_config.sql_user}:{env_config.sql_pass}@{env_config.sql_host}:{env_config.sql_port}/{env_config.sql_db}?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=no"
 
-API_KEY = os.environ.get("API_KEY")
-BASE_URL = os.environ.get("BASE_URL")
+weaviate_client_manager = WeaviateClientManager(
+    host=env_config.weaviate_host, 
+    port=env_config.weaviate_port,
+    grpc_port=env_config.weaviate_grpc_port, 
+    user_key=env_config.weaviate_user_key,
+    alpha=env_config.weaviate_alpha_hybrid_search
+)
 
-SQL_CONNECTION_URI = f"mssql+pyodbc://{SQL_USER}:{SQL_PASS}@{SQL_HOST}:{SQL_PORT}/{SQL_DB}?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=no"
+mongodb_manager = MongoDBManager(
+    host=env_config.mongodb_uri,
+    user=env_config.mongodb_initdb_dev_username,
+    password=env_config.mongodb_initdb_dev_password
+)
 
-sql_required_tables = [table.strip() for table in SQL_REQUIRED_TABLE.split(",") if table.strip()]
+sql_manager = SQLDatabaseManager(
+    connection_uri=SQL_CONNECTION_URI,
+    required_tables=env_config.sql_required_tables,
+    cache_path=env_config.sql_metadata_cache_path
+)
 
-weaviate_client = WeaviateClientManager(WEAVIATE_HOST, WEAVIATE_PORT, WEAVIATE_GRPC_PORT, WEAVIATE_USER_KEY, HYBRID_SEARCH_ALPHA)
-sql_manager = SQLDatabaseManager(SQL_CONNECTION_URI, sql_required_tables, SQL_METADATA_CACHE_PATH)
-mongodb_manager = MongoDBManager(MONGODB_URI, MONGO_INITDB_DEV_USERNAME, MONGO_INITDB_DEV_PASSWORD)
+def get_weaviate_client_manager() -> WeaviateClientManager:
+    """Dependency provider for FastAPI."""
+    return weaviate_client_manager
+
+def get_mongodb_manager() -> MongoDBManager:
+    """Dependency provider for FastAPI."""
+    return mongodb_manager
+
+def get_sql_manager() -> SQLDatabaseManager:
+    """Dependency provider for FastAPI."""
+    return sql_manager
