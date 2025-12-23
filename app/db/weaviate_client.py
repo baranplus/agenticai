@@ -1,17 +1,13 @@
 import os
 import requests
 import json
-import hashlib
-import uuid
 import weaviate
 from weaviate.collections import Collection
 from weaviate.classes.init import Auth
-from weaviate.classes.config import Configure, Property, DataType
 from weaviate.classes.query import Filter, MetadataQuery, BM25Operator
 from weaviate.collections.classes.internal import Object as WeaviateObject
 from langchain_core.documents import Document
-from tqdm import tqdm
-from typing import List, Tuple, Dict, Any
+from typing import List, Dict, Any
 
 from utils.logger import logger
 
