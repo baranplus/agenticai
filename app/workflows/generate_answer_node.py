@@ -1,5 +1,5 @@
 from langchain.schema import AIMessage
-from .state import AgenticRAGState, SmartSQLPipelineState
+from .states import AgenticRAGState, SmartSQLPipelineState
 from llm import final_response_llm, initial_response_llm
 from utils.logger import logger
 

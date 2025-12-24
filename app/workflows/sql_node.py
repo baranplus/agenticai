@@ -1,6 +1,6 @@
 import re
 
-from .state import SmartSQLPipelineState
+from .states import SmartSQLPipelineState
 from db import sql_manager
 from llm import sql_generation_llm
 from utils.logger import logger

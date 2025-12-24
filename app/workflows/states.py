@@ -9,12 +9,13 @@ class AgenticRAGState(TypedDict):
     docs: list[Document]
     sourcing: dict
     rewrite_count: int
-    collection_name: str
     top_k: int
     return_docs: bool
-    mongodb_db : str
-    mongodb_source_collection : str
-    mongodb_text_collection : str
+    weaviate_collection: str
+    mongo_dbname: str
+    mongo_files_collection : str
+    mongo_page_collection : str
+    mongo_chunk_collection : str
 
 class SmartSQLPipelineState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]

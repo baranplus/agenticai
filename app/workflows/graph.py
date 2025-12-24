@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, START, END
 
-from .state import AgenticRAGState, SmartSQLPipelineState
+from .states import AgenticRAGState, SmartSQLPipelineState
 from .query_validation_node import grade_query
 from .generate_answer_node import generate_intial_answer, generate_null_answer, generate_answer_agentic_rag, generate_answer_smart_sql
 from .extract_keywords_node import extract_keywords_initial
