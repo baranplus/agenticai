@@ -1,8 +1,3 @@
-from .states import AgenticRAGState
-from llm import final_response_llm
-
-from utils.logger import logger
-
 EXTRACT_KEYWORDS_INITIAL_PROMPT = (
     "Look at the input and try to reason about the underlying semantic intent / meaning. using examples\n"
     "Try to change and expand the query into a series of related keyword. \n"
@@ -24,7 +19,6 @@ EXTRACT_KEYWORDS_INITIAL_PROMPT = (
     "\n ------- \n"
     "Final output (only keywords):"
 )
-
 
 EXTRACT_KEYWORDS_PROMPT = (
     "Look at the input and try to reason about the underlying semantic intent / meaning using examples.\n"
@@ -51,26 +45,3 @@ EXTRACT_KEYWORDS_PROMPT = (
     "\n ------- \n"
     "Final output (only keywords):"
 )
-
-def extract_keywords_initial(state: AgenticRAGState):
-    """Rewrite the original user question."""
-    question = state["messages"][0].content
-    prompt = EXTRACT_KEYWORDS_INITIAL_PROMPT.format(question=question)
-    response = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
-    logger.info(response.content)
-    return {
-        "messages": [{"role": "user", "content": response.content}],
-    }
-
-
-def extract_keywords(state: AgenticRAGState):
-    """Rewrite the original user question."""
-    question = state["messages"][0].content
-    previous_keywords = state["messages"][-2].content
-    prompt = EXTRACT_KEYWORDS_PROMPT.format(question=question, previous_keywords=previous_keywords)
-    response = final_response_llm.llm.invoke([{"role": "user", "content": prompt}])
-    logger.info(response.content)
-    return {
-        "messages": [{"role": "user", "content": response.content}],
-        "rewrite_count": state["rewrite_count"] + 1
-    }

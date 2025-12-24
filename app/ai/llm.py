@@ -1,6 +1,5 @@
-import os
 from langchain_openai import ChatOpenAI
-
+from typing import List, Dict, Any
 class LLM:
 
     def __init__(self, base_url : str, api_key : str):
@@ -16,6 +15,7 @@ class LLM:
         )
         return client
 
-    def get_completions(self, model_name: str, temperature : float):
+    def get_completions(self, model_name: str, temperature : float, message : List[Dict[str, Any]]):
         client = self._get_client(model_name, temperature)
-        return None
+        response = client.invoke(message)
+        return response

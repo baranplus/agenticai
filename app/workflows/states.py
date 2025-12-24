@@ -1,7 +1,11 @@
+from dataclasses import dataclass
 from langchain.schema import Document
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 from typing import Annotated, TypedDict
+
+from db import WeaviateClientManager, MongoDBManager,SQLDatabaseManager
+from ai import LLM, Embedding
 
 class AgenticRAGState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
@@ -19,3 +23,15 @@ class AgenticRAGState(TypedDict):
 
 class SmartSQLPipelineState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
+
+@dataclass
+class AgenticRAGContextSchema:
+    weaviate_manager : WeaviateClientManager
+    mongodb_manager : MongoDBManager
+    llm : LLM
+    embedding : Embedding 
+
+@dataclass
+class SmartSQLPipelineContextSchema:
+    sql_manager : SQLDatabaseManager
+    llm : LLM
