@@ -5,29 +5,38 @@ import traceback
 
 from schema.request import AgenticRAGQueryRequest
 from agents.graph import build_graph_agentic_rag_local_embedding
-from db import weaviate_client, mongodb_manager, weaviate_client
+from routers import (
+    WeaviateClientDependency,
+    MongoDBManagerDependency,
+    LLMDependency,
+    EmbeddingDependency
+)
 
 from utils.logger import logger
 
 router = APIRouter()
 
-# agentic_graph = build_graph()
 agentic_graph_local_embedding = build_graph_agentic_rag_local_embedding()
 
-
 @router.post("/query")
-async def query(request: AgenticRAGQueryRequest):
+async def query(
+    weaviate_db : WeaviateClientDependency,
+    mongo_db : MongoDBManagerDependency,
+    llm : LLMDependency,
+    embedding : EmbeddingDependency,
+    request: AgenticRAGQueryRequest
+):
 
-    if not weaviate_client.check_collection_existence(request.collection):
+    if not weaviate_db.check_collection_existence(request.collection):
         
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Collection '{request.collection}' not found in the database."
         )
     
-    if not mongodb_manager.check_db_existence(request.mongodb_db) or \
-        not mongodb_manager.check_collection_existence(request.mongodb_db, request.mongodb_text_collection) or \
-        not mongodb_manager.check_collection_existence(request.mongodb_db, request.mongodb_source_collection):
+    if not mongo_db.check_db_existence(request.mongodb_db) or \
+        not mongo_db.check_collection_existence(request.mongodb_db, request.mongodb_text_collection) or \
+        not mongo_db.check_collection_existence(request.mongodb_db, request.mongodb_source_collection):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Database '{request.mongodb_db}' or Collections '{request.mongodb_source_collection}', '{request.mongodb_text_collection}' not found in the database."
@@ -49,7 +58,6 @@ async def query(request: AgenticRAGQueryRequest):
         }
 
         response = agentic_graph_local_embedding.invoke(init_state)
-
 
         return Response(content=response["messages"][-1].content, status_code=status.HTTP_201_CREATED)
         
