@@ -1,9 +1,23 @@
-import os
-from .model import LLM
+from .llm import LLM
+from .embedding import Embedding
 
-SQL_GENERATION_MODEL = os.environ.get("SQL_GENERATION_MODEL")
+from configs.env_configs import env_config
 
-validation_llm = LLM(temperature=0)
-final_response_llm = LLM(temperature=0)
-initial_response_llm = LLM(temperature=0.4)
-sql_generation_llm = LLM(temperature=0, model_name=SQL_GENERATION_MODEL)
+llm = LLM(
+    base_url=env_config.base_url,
+    api_key=env_config.base_url
+)
+
+embedding_model = Embedding(
+    url=env_config.embedding_url,
+    api_key=env_config.api_key,
+    model_name=env_config.embedding_model
+)
+
+def get_llm() -> LLM:
+    """Dependency provider for FastAPI."""
+    return llm
+
+def get_embedding() -> Embedding:
+    """Dependency provider for FastAPI."""
+    return embedding_model
