@@ -11,6 +11,7 @@ from workflows.nodes.generate_answer import (
     generate_answer_agentic_rag_for_vector_search,
     generate_answer_agentic_rag_for_fulltext_search
 )
+from workflows.nodes.sourcing import show_source
 
 class WorkflowGraphBuilder:
     """
@@ -45,7 +46,8 @@ class WorkflowGraphBuilder:
             "return_docs" : return_docs,
             "generate_answer_branching" : generate_answer_branching,
             "generate_answer_agentic_rag_for_vector_search" : generate_answer_agentic_rag_for_vector_search,
-            "generate_answer_agentic_rag_for_fulltext_search" : generate_answer_agentic_rag_for_fulltext_search  
+            "generate_answer_agentic_rag_for_fulltext_search" : generate_answer_agentic_rag_for_fulltext_search,
+            "show_source" : show_source
         }
 
     def build_graph(self) -> CompiledStateGraph:
@@ -78,8 +80,10 @@ class WorkflowGraphBuilder:
         graph_builder.add_edge("generate_answer_branching", "generate_answer_agentic_rag_for_vector_search")
         graph_builder.add_edge("generate_answer_branching", "generate_answer_agentic_rag_for_fulltext_search")
 
-        graph_builder.add_edge("generate_answer_agentic_rag_for_vector_search", END)
-        graph_builder.add_edge("generate_answer_agentic_rag_for_fulltext_search", END)
+        graph_builder.add_edge("generate_answer_agentic_rag_for_vector_search", "show_source")
+        graph_builder.add_edge("generate_answer_agentic_rag_for_fulltext_search", "show_source")
+
+        graph_builder.add_edge("show_source", END)
 
         graph = graph_builder.compile()
 

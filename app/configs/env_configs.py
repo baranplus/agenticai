@@ -85,6 +85,4 @@ class Environment_Config:
         )
 
 env_config = Environment_Config.initialize()
-from utils.logger import logger
-logger.info(env_config.api_key)
 

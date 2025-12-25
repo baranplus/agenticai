@@ -1,5 +1,6 @@
 from langgraph.runtime import Runtime
 from langchain.schema import Document
+from langchain_core.messages import AIMessage
 from typing import List, Tuple, Dict, Any
 
 from workflows.states import (
@@ -11,7 +12,6 @@ from workflows.states import (
 
 from ai.prompt_templates import (
     GENERATE_PROMPT_AGENTIC_RAG,
-    GENERATE_PROMPT_INITAL_RESPONSE,
     GENERATE_PROMPT_SMART_SQL
 )
 from configs.env_configs import env_config
@@ -37,13 +37,16 @@ def generate_answer_agentic_rag_for_vector_search(
     context, sourcing  = augment_context(docs)
 
     prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
+
     response = runtime.context.llm.get_completions(
         model_name=env_config.generation_model,
         temperature=0.0,
         message=[{"role": "user", "content": prompt}]
     )
 
-    return {"messages": response, "sourcing_vector_search" : sourcing}
+    answer = AIMessage(content=response.content, additional_kwargs={ "path" : "vector_search"})
+
+    return {"messages": [answer], "sourcing_vector_search" : sourcing}
 
 def generate_answer_agentic_rag_for_fulltext_search(
         state: AgenticRAGState, 
@@ -56,13 +59,16 @@ def generate_answer_agentic_rag_for_fulltext_search(
     context, sourcing  = augment_context(docs)
 
     prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
+
     response = runtime.context.llm.get_completions(
         model_name=env_config.generation_model,
         temperature=0.0,
         message=[{"role": "user", "content": prompt}]
     )
 
-    return {"messages": response, "sourcing_full_text_search" : sourcing}
+    answer = AIMessage(content=response.content, additional_kwargs={ "path" : "fulltext_search"})
+
+    return {"messages": [answer], "sourcing_full_text_search" : sourcing}
 
 def generate_answer_smart_sql(
         state: SmartSQLPipelineState,
