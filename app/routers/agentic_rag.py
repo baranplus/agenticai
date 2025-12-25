@@ -44,11 +44,9 @@ async def query(
     try:
         init_state = {
             "messages": [HumanMessage(content=request.message)],
-            "answers" : [],
             "vector_docs" : [],
             "full_text_docs" : [],
             "sourcing" : {},
-            "rewrite_count" : 0,
             "top_k" : request.top_k,
             "return_docs": request.return_docs,
             "weaviate_collection" : request.collection,
@@ -66,8 +64,7 @@ async def query(
         }
 
         response = agentic_graph.invoke(init_state, context=runtime_context)
-        logger.info(type(response["messages"]))
-        logger.info(len(response["messages"]))
+        logger.info(f"Lenght Messages : {len(response["messages"])}")
         return Response(content=response["messages"][-1].content, status_code=status.HTTP_201_CREATED)
         
     except Exception as e:

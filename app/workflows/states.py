@@ -9,11 +9,9 @@ from ai import LLM, Embedding
 
 class AgenticRAGState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
-    answers: list[BaseMessage]
     vector_docs: list[Document]
     full_text_docs: list[Document]
     sourcing: dict
-    rewrite_count: int
     top_k: int
     return_docs: bool
     weaviate_collection: str

@@ -5,6 +5,7 @@ from workflows.nodes.extract_keywords import extract_keywords_initial
 from workflows.nodes.retriever import retrieve_documents_by_vector_search, retrieve_documents_by_fulltext_search
 from workflows.nodes.merge import merge_after_retrieve
 from workflows.nodes.decision_point import return_docs_or_generate_answer
+from workflows.nodes.return_docs import return_docs
 from workflows.nodes.generate_answer import generate_answer_agentic_rag
 
 class WorkflowGraphBuilder:
@@ -37,7 +38,8 @@ class WorkflowGraphBuilder:
             "retrieve_documents_by_vector_search" : retrieve_documents_by_vector_search,
             "retrieve_documents_by_fulltext_search" : retrieve_documents_by_fulltext_search,
             "merge_after_retrieve" : merge_after_retrieve,
-            "return_docs_or_generate_answer" : return_docs_or_generate_answer
+            "return_docs_or_generate_answer" : return_docs_or_generate_answer,
+            "return_docs" : return_docs
         }
 
     def build_graph(self) -> CompiledStateGraph:
@@ -60,11 +62,13 @@ class WorkflowGraphBuilder:
             "merge_after_retrieve",
             return_docs_or_generate_answer,
             {
-                "return_docs" : END,
+                "return_docs" : "return_docs",
                 "generate_answer" : END
             }
 
         )
+
+        graph_builder.add_edge("return_docs", END)
 
         graph = graph_builder.compile()
 

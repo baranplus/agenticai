@@ -123,7 +123,7 @@ def retrieve_documents_by_vector_search(
 
     vector_search_docs = sort_documents_by_score(vector_search_docs, state["top_k"])
     logger.info(f"Length docs vector search : {len(vector_search_docs)}")
-    return { "vector_docs" : [vector_search_docs] }
+    return { "vector_docs" : vector_search_docs }
 
 def retrieve_documents_by_fulltext_search(
     state : AgenticRAGState, 
@@ -157,4 +157,4 @@ def retrieve_documents_by_fulltext_search(
     
     fulltext_search_docs = sort_documents_by_score(fulltext_search_docs, state["top_k"])
     logger.info(f"Length docs full-text search : {len(fulltext_search_docs)}")
-    return {"full_text_docs" : [fulltext_search_docs]}
+    return { "full_text_docs" : fulltext_search_docs }
