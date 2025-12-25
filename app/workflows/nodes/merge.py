@@ -5,4 +5,4 @@ def merge_after_retrieve(state : AgenticRAGState, runtime : Runtime[AgenticRAGCo
     """
         merging path after retrieving docs from vector search and full-text search
     """
-    return
+    return state

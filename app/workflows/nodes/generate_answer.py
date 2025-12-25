@@ -2,7 +2,7 @@ from langgraph.runtime import Runtime
 from langchain.schema import Document
 from typing import List, Tuple, Dict, Any
 
-from ..states import (
+from workflows.states import (
     AgenticRAGState,
     AgenticRAGContextSchema, 
     SmartSQLPipelineState,
@@ -26,15 +26,14 @@ def augment_context(docs : List[Document]) -> Tuple[str, Dict[str, Any]]:
         context += f"Snippet {i+1} : {doc.page_content} <end_of_snippet>\n"
     return (context, sourcing)
 
-def generate_answer_agentic_rag(
+def generate_answer_agentic_rag_for_vector_search(
         state: AgenticRAGState, 
-        docs_key : str, 
         runtime : Runtime[AgenticRAGContextSchema]
     ):
     """Generate an answer."""
 
     question = state["messages"][0].content
-    docs =  state[docs_key]
+    docs =  state["vector_docs"]
     context, sourcing  = augment_context(docs)
 
     prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
@@ -44,7 +43,26 @@ def generate_answer_agentic_rag(
         message=[{"role": "user", "content": prompt}]
     )
 
-    return {"messages": response, "sourcing" : sourcing}
+    return {"messages": response, "sourcing_vector_search" : sourcing}
+
+def generate_answer_agentic_rag_for_fulltext_search(
+        state: AgenticRAGState, 
+        runtime : Runtime[AgenticRAGContextSchema]
+    ):
+    """Generate an answer."""
+
+    question = state["messages"][0].content
+    docs =  state["full_text_docs"]
+    context, sourcing  = augment_context(docs)
+
+    prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
+    response = runtime.context.llm.get_completions(
+        model_name=env_config.generation_model,
+        temperature=0.0,
+        message=[{"role": "user", "content": prompt}]
+    )
+
+    return {"messages": response, "sourcing_full_text_search" : sourcing}
 
 def generate_answer_smart_sql(
         state: SmartSQLPipelineState,
@@ -62,20 +80,5 @@ def generate_answer_smart_sql(
     )
     return {"messages": [respoonse]}
 
-def generate_intial_answer(
-        state: AgenticRAGState,
-        runtime : Runtime[AgenticRAGContextSchema]
-    ):
-    """Generate an initial answer."""
-    question = state["messages"][0].content
-    prompt = GENERATE_PROMPT_INITAL_RESPONSE.format(question=question)
-    response = runtime.context.llm.get_completions(
-        model_name=env_config.generation_model,
-        temperature=0.2,
-        message=[{"role": "user", "content": prompt}]
-    )
-    return {"messages": [response]}
-
-def generate_null_answer(state: AgenticRAGState):
-    """Generate a null answer."""
-    return {"messages": [{"role": "user", "content": ""}]}
+def generate_answer_branching(state : AgenticRAGState, runtime : Runtime[AgenticRAGContextSchema]):
+    return state

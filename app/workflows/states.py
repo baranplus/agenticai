@@ -11,7 +11,8 @@ class AgenticRAGState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     vector_docs: list[Document]
     full_text_docs: list[Document]
-    sourcing: dict
+    sourcing_vector_search: dict
+    sourcing_full_text_search : dict
     top_k: int
     return_docs: bool
     weaviate_collection: str
