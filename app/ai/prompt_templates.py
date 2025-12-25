@@ -83,3 +83,11 @@ GENERATE_PROMPT_SMART_SQL = (
     "Question: {question} \n"
     "Context: {context}"
 )
+
+GRADE_PROMPT = (
+    "You are a grader assessing relevance of a retrieved document to a user question. \n "
+    "Here is the retrieved document: \n\n {context} \n\n"
+    "Here is the user question: {question} \n"
+    "If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n"
+    "Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question."
+)
