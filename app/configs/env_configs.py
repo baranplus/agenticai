@@ -48,8 +48,8 @@ class Environment_Config:
         weaviate_user_key = os.environ.get("WEAVIATE_USER_KEY")
         hybrid_search_alpha = float(os.environ.get("HYBRID_SEARCH_ALPHA"))
         mongodb_uri = os.environ.get("MONGODB_URI")
-        mongodb_initdb_dev_username = os.environ.get("MONGO_INITDB_DEV_USERNAME")
-        mongodb_initdb_dev_password = os.environ.get("MONGO_INITDB_DEV_PASSWORD")
+        mongodb_initdb_dev_username = os.environ.get("MONGODB_INITDB_DEV_USERNAME")
+        mongodb_initdb_dev_password = os.environ.get("MONGODB_INITDB_DEV_PASSWORD")
         source_download_api_path_base = os.environ.get("SOURCE_DOWNLOAD_API_PATH_BASE")
         sql_host = os.environ.get("SQL_HOST")
         sql_port = int(os.environ.get("SQL_PORT"))
@@ -85,4 +85,6 @@ class Environment_Config:
         )
 
 env_config = Environment_Config.initialize()
+from utils.logger import logger
+logger.info(env_config.api_key)
 

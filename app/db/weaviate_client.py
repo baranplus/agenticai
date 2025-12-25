@@ -8,12 +8,12 @@ from typing import List, Dict, Any
 
 class WeaviateClientManager:
 
-    def __init__(self, host: str, port: str, grcp_port : str, user_key: str, alpha : float) -> None:
+    def __init__(self, host: str, port: str, grpc_port : str, user_key: str, alpha : float) -> None:
 
         self.client = weaviate.connect_to_local(
             host=host,
             port=port,
-            grpc_port=grcp_port,
+            grpc_port=grpc_port,
             auth_credentials=Auth.api_key(user_key),
         )
         self.alpha_hybrid_search = alpha

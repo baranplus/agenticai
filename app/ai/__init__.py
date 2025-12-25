@@ -5,7 +5,7 @@ from configs.env_configs import env_config
 
 llm = LLM(
     base_url=env_config.base_url,
-    api_key=env_config.base_url
+    api_key=env_config.api_key
 )
 
 embedding_model = Embedding(

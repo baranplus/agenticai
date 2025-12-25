@@ -10,7 +10,7 @@ weaviate_client_manager = WeaviateClientManager(
     port=env_config.weaviate_port,
     grpc_port=env_config.weaviate_grpc_port, 
     user_key=env_config.weaviate_user_key,
-    alpha=env_config.weaviate_alpha_hybrid_search
+    alpha=env_config.hybrid_search_alpha
 )
 
 mongodb_manager = MongoDBManager(

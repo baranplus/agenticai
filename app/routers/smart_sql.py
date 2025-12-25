@@ -4,13 +4,9 @@ import traceback
 
 from schema.request import GeneralQueryRequest
 from schema.response import GeneralResponse
-from agents.graph import build_graph_smart_sql
-
 from utils.logger import logger
 
 router = APIRouter()
-
-smart_sql_graph = build_graph_smart_sql()
 
 @router.post("/query")
 async def query(request: GeneralQueryRequest):
@@ -20,9 +16,7 @@ async def query(request: GeneralQueryRequest):
             "messages": [HumanMessage(content=request.message)],
         }
 
-        response = smart_sql_graph.invoke(init_state)
-
-        return response["messages"][-1].content
+        return ""
         
     except Exception as e:
         error = traceback.format_exc()

@@ -1,4 +1,5 @@
 from langgraph.runtime import Runtime
+from langchain_core.messages import AIMessage
 
 from workflows.states import AgenticRAGState, AgenticRAGContextSchema
 from ai.prompt_templates import EXTRACT_KEYWORDS_INITIAL_PROMPT, EXTRACT_KEYWORDS_PROMPT
@@ -14,10 +15,7 @@ def extract_keywords_initial(state: AgenticRAGState, runtime : Runtime[AgenticRA
         temperature=0.0,
         message=[{"role": "user", "content": prompt}]
     )
-    logger.info(response.content)
-    return {
-        "messages": [{"role": "user", "content": response.content}],
-    }
+    return {"messages": [AIMessage(content=response.content)]}
 
 def extract_keywords(state: AgenticRAGState, runtime : Runtime[AgenticRAGContextSchema]):
     """Rewrite the original user question."""

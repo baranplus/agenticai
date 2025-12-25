@@ -17,10 +17,10 @@ class AgenticRAGState(TypedDict):
     top_k: int
     return_docs: bool
     weaviate_collection: str
-    mongo_dbname: str
-    mongo_files_collection : str
-    mongo_page_collection : str
-    mongo_chunk_collection : str
+    mongodb_dbname: str
+    mongodb_files_collection : str
+    mongodb_page_collection : str
+    mongodb_chunk_collection : str
 
 class SmartSQLPipelineState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]

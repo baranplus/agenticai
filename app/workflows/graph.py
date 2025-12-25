@@ -1,56 +1,104 @@
 from langgraph.graph import StateGraph, START, END
+from langgraph.graph.state import CompiledStateGraph
 
-from .states import AgenticRAGState, SmartSQLPipelineState
-from .query_validation_node import grade_query
-from .nodes.generate_answer import generate_intial_answer, generate_null_answer, generate_answer_agentic_rag, generate_answer_smart_sql
-from .nodes.extract_keywords import extract_keywords_initial
-from .retriever_node import retrieve_documents
-from .grade_document_node import grade_documents
-from .return_docs_node import return_docs
-from .sourcing_node import show_source
-from .sql_node import execute_sql
+from workflows.nodes.extract_keywords import extract_keywords_initial
+from workflows.nodes.generate_answer import generate_answer_agentic_rag
 
-def build_graph_agentic_rag_local_embedding():
+class WorkflowGraphBuilder:
+    """
+    A class responsible for building and compiling an Agentic RAG workflow graph
+    using LangGraph's StateGraph.
+
+    This encapsulates the graph construction logic, making it configurable,
+    reusable, and easier to test or extend.
+    """
+
+    def __init__(
+        self,
+        state_schema: type ,
+        context_schema : type
+    ):
+        """
+        Initialize the graph builder.
+
+        Args:
+            state_schema: The state class/annotation used in the graph (e.g., AgenticRAGState).
+                          Defaults to AgenticRAGState if not provided.
+            context_schema: The context that provides callable instances
+        """
+        self.state_schema = state_schema
+        self.context_schema = context_schema
+
+        self.nodes = {
+            "extract_keywords": extract_keywords_initial,
+        }
+
+    def build_graph(self) -> CompiledStateGraph:
+        """Construct and return the compiled LangGraph workflow."""
+
+        graph_builder = StateGraph(self.state_schema, context_schema=self.context_schema)
+
+        for node_name, node_func in self.nodes.items():
+            graph_builder.add_node(node_name, node_func)
+
+        graph_builder.add_edge(START, "extract_keywords")
+        graph_builder.add_edge("extract_keywords", END)
+
+        graph = graph_builder.compile()
+
+        return graph
+
+    def __call__(self) -> CompiledStateGraph:
+        """
+        Make the instance callable for convenience:
+        builder = AgenticRAGGraphBuilder()
+        graph = builder()
+        """
+        return self.build_graph()
+
+
+
+# def build_graph_agentic_rag_local_embedding():
     
-    graph_builder = StateGraph(AgenticRAGState)
+#     graph_builder = StateGraph(AgenticRAGState)
 
-    graph_builder.add_node(grade_query)
-    graph_builder.add_node(generate_intial_answer)
-    graph_builder.add_node(generate_null_answer)
-    graph_builder.add_node(generate_answer_agentic_rag)
-    graph_builder.add_node(generate_answer_smart_sql)
-    graph_builder.add_node(extract_keywords_initial)
-    graph_builder.add_node(retrieve_documents)
-    graph_builder.add_node(grade_documents)
-    graph_builder.add_node(return_docs)
-    graph_builder.add_node(show_source)
+#     graph_builder.add_node(grade_query)
+#     graph_builder.add_node(generate_intial_answer)
+#     graph_builder.add_node(generate_null_answer)
+#     graph_builder.add_node(generate_answer_agentic_rag)
+#     graph_builder.add_node(generate_answer_smart_sql)
+#     graph_builder.add_node(extract_keywords_initial)
+#     graph_builder.add_node(retrieve_documents)
+#     graph_builder.add_node(grade_documents)
+#     graph_builder.add_node(return_docs)
+#     graph_builder.add_node(show_source)
 
-    # Either extract_keywords_initial
-    graph_builder.add_conditional_edges(START, grade_query)
-    graph_builder.add_edge("generate_intial_answer", END)
-    graph_builder.add_edge("extract_keywords_initial", "retrieve_documents")
-    # Either generate_null_answer, return_docs, generate_answer_agentic_rag
-    graph_builder.add_conditional_edges("retrieve_documents", grade_documents)
-    graph_builder.add_edge("generate_null_answer", END)
-    graph_builder.add_edge("return_docs", END)
-    graph_builder.add_edge("generate_answer_agentic_rag", "show_source")
-    graph_builder.add_edge("show_source", END)
+#     # Either extract_keywords_initial
+#     graph_builder.add_conditional_edges(START, grade_query)
+#     graph_builder.add_edge("generate_intial_answer", END)
+#     graph_builder.add_edge("extract_keywords_initial", "retrieve_documents")
+#     # Either generate_null_answer, return_docs, generate_answer_agentic_rag
+#     graph_builder.add_conditional_edges("retrieve_documents", grade_documents)
+#     graph_builder.add_edge("generate_null_answer", END)
+#     graph_builder.add_edge("return_docs", END)
+#     graph_builder.add_edge("generate_answer_agentic_rag", "show_source")
+#     graph_builder.add_edge("show_source", END)
 
-    graph = graph_builder.compile()
+#     graph = graph_builder.compile()
     
-    return graph
+#     return graph
 
-def build_graph_smart_sql():
+# def build_graph_smart_sql():
 
-    graph_builder = StateGraph(SmartSQLPipelineState)
+#     graph_builder = StateGraph(SmartSQLPipelineState)
 
-    graph_builder.add_node(execute_sql)
-    graph_builder.add_node(generate_answer_smart_sql)
+#     graph_builder.add_node(execute_sql)
+#     graph_builder.add_node(generate_answer_smart_sql)
 
-    graph_builder.add_edge(START, "execute_sql")
-    graph_builder.add_edge("execute_sql", "generate_answer_smart_sql")
-    graph_builder.add_edge("generate_answer_smart_sql", END)
-    graph = graph_builder.compile()
+#     graph_builder.add_edge(START, "execute_sql")
+#     graph_builder.add_edge("execute_sql", "generate_answer_smart_sql")
+#     graph_builder.add_edge("generate_answer_smart_sql", END)
+#     graph = graph_builder.compile()
 
-    return graph
+#     return graph
     
