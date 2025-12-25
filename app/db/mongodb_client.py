@@ -4,6 +4,7 @@ from io import BytesIO
 from pymongo import MongoClient
 from pymongo.database import Database as MongoDBDatabase
 from pymongo.collection import Collection as MongoDBCollection
+from langchain.schema import Document
 from typing import List, Dict, Any, Tuple, Optional, Set
 
 class MongoDBManager:
@@ -52,7 +53,7 @@ class MongoDBManager:
         found_docs = [doc for doc in cursor]
         return found_docs
 
-    def get_record(self, db_name : str, collection_name : str, search_record : Dict[str, Any]) -> Dict[str, any]:
+    def get_record(self, db_name : str, collection_name : str, search_record : Dict[str, Any]) -> Dict[str, Any]:
         collection = self.get_mongodb_collection(db_name, collection_name)
         record = collection.find_one(search_record)
         return record
@@ -62,14 +63,14 @@ class MongoDBManager:
             db_name : str, 
             collection_name : str, 
             query : str, 
-            source : Optional[str] = None, 
+            filename : Optional[str] = None, 
             top_k : int = 100
-        ) -> List[Dict[str, Any]]:
+        ) -> List[Document]:
 
         search_query = {"$text": {"$search": query}}
 
-        if source:
-            search_query["filename"] = source
+        if filename:
+            search_query["filename"] = filename
 
         collection = self.get_mongodb_collection(db_name, collection_name)
         cursor = collection.find(
@@ -77,7 +78,9 @@ class MongoDBManager:
             {"score": {"$meta": "textScore"}}
         ).sort([("score", {"$meta": "textScore"})]).limit(top_k)
 
-        return list(cursor)
+        raw_docs = list(cursor)
+
+        return self._process_query_returns(raw_docs)
 
     def get_file_from_gridfs_by_filename(self, db_name: str, collection : str, file_name: str, gridfs_collection : str = "files") -> Tuple[str, str, BytesIO]:
 
@@ -158,3 +161,22 @@ class MongoDBManager:
             return set()
 
         return set(result[0].get("values", []))
+
+    def _process_query_returns(self, raw_docs: List[Dict[str, Any]]) -> List[Document]:
+        langchain_docs = []
+
+        for obj in raw_docs:
+
+            page_content = obj.get("content", "")
+            metadata = {}
+
+            for key, value in obj.items():
+                if key != "content":
+                    metadata[key] = value
+
+            metadata["uuid"] = str(obj.get("_id"))
+
+            doc = Document(page_content=page_content, metadata=metadata)
+            langchain_docs.append(doc)
+
+        return langchain_docs

@@ -66,7 +66,6 @@ async def query(
         }
 
         response = agentic_graph.invoke(init_state, context=runtime_context)
-        logger.info(response)
         logger.info(type(response["messages"]))
         logger.info(len(response["messages"]))
         return Response(content=response["messages"][-1].content, status_code=status.HTTP_201_CREATED)

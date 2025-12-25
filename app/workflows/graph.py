@@ -2,6 +2,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 
 from workflows.nodes.extract_keywords import extract_keywords_initial
+from workflows.nodes.retriever import retrieve_documents_by_vector_search, retrieve_documents_by_fulltext_search
 from workflows.nodes.generate_answer import generate_answer_agentic_rag
 
 class WorkflowGraphBuilder:
@@ -31,6 +32,8 @@ class WorkflowGraphBuilder:
 
         self.nodes = {
             "extract_keywords": extract_keywords_initial,
+            "retrieve_documents_by_vector_search" : retrieve_documents_by_vector_search,
+            "retrieve_documents_by_fulltext_search" : retrieve_documents_by_fulltext_search
         }
 
     def build_graph(self) -> CompiledStateGraph:
@@ -42,7 +45,10 @@ class WorkflowGraphBuilder:
             graph_builder.add_node(node_name, node_func)
 
         graph_builder.add_edge(START, "extract_keywords")
-        graph_builder.add_edge("extract_keywords", END)
+        graph_builder.add_edge("extract_keywords", "retrieve_documents_by_vector_search")
+        graph_builder.add_edge("extract_keywords", "retrieve_documents_by_fulltext_search")
+        graph_builder.add_edge("retrieve_documents_by_vector_search", END)
+        graph_builder.add_edge("retrieve_documents_by_fulltext_search", END)
 
         graph = graph_builder.compile()
 

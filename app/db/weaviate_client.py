@@ -83,10 +83,7 @@ class WeaviateClientManager:
 
             for key, value in obj.properties.items():
                 if key != "content":
-                    if key == "filename":
-                        metadata["source"] = value
-                    else:
-                        metadata[key] = value
+                    metadata[key] = value
 
             metadata["weaviate_uuid"] = str(obj.uuid)
 
