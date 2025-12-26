@@ -23,9 +23,9 @@ def generate_sql(question: str, llm : Any) -> str:
     prompt = PERSIAN_SQL_PROMPT.format(question=question, schema=schema)
 
     response = llm.invoke(
-        env_config.sql_generation_model,
-        0.0,
-        [{"role": "user", "content": prompt}]
+        model_name=env_config.sql_generation_model,
+        temperature=0.0,
+        message=[{"role": "user", "content": prompt}]
     )
 
     sql_query = response.content.strip()

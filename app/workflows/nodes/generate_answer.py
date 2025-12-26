@@ -79,12 +79,15 @@ def generate_answer_smart_sql(
     context = state["messages"][-1].content
     logger.info(f"------\n\n{context}\n\n------------")
     prompt = GENERATE_PROMPT_SMART_SQL.format(question=question, context=context)
-    respoonse = runtime.context.llm.get_completions(
+    response = runtime.context.llm.get_completions(
         model_name=env_config.generation_model,
         temperature=0.0,
         message=[{"role": "user", "content": prompt}]
     )
-    return {"messages": [respoonse]}
+
+    answer = AIMessage(content=response.content)
+
+    return {"messages": [answer]}
 
 def generate_answer_branching(state : AgenticRAGState, runtime : Runtime[AgenticRAGContextSchema]):
     return state
