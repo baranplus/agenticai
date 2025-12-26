@@ -32,6 +32,7 @@ class Environment_Config:
     sql_db : str
     sql_metadata_cache_path : str
     sql_required_tables : List[str]
+    sql_endpoint_enabled : bool
 
     @classmethod
     def initialize(cls) -> "Environment_Config":
@@ -58,7 +59,7 @@ class Environment_Config:
         sql_db = os.environ.get("SQL_DB")
         sql_metadata_cache_path = os.environ.get("SQL_METADATA_CACHE_PATH")
         sql_required_tables = [table.strip() for table in os.environ.get("SQL_REQUIRED_TABLES").split(",") if table.strip()]
-
+        sql_endpoint_enabled = os.environ.get("SQL_ENDPOINT_ENABLED").lower() == "true"
         return cls(
             api_key = api_key,
             base_url = base_url,
@@ -81,7 +82,8 @@ class Environment_Config:
             sql_pass = sql_pass,
             sql_db = sql_db,
             sql_metadata_cache_path = sql_metadata_cache_path,
-            sql_required_tables = sql_required_tables
+            sql_required_tables = sql_required_tables,
+            sql_endpoint_enabled = sql_endpoint_enabled
         )
 
 env_config = Environment_Config.initialize()

@@ -19,11 +19,12 @@ mongodb_manager = MongoDBManager(
     password=env_config.mongodb_initdb_dev_password
 )
 
-sql_manager = SQLDatabaseManager(
-    connection_uri=SQL_CONNECTION_URI,
-    required_tables=env_config.sql_required_tables,
-    cache_path=env_config.sql_metadata_cache_path
-)
+if env_config.sql_endpoint_enabled:
+    sql_manager = SQLDatabaseManager(
+        connection_uri=SQL_CONNECTION_URI,
+        required_tables=env_config.sql_required_tables,
+        cache_path=env_config.sql_metadata_cache_path
+    )
 
 def get_weaviate_client_manager() -> WeaviateClientManager:
     """Dependency provider for FastAPI."""

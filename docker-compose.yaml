@@ -31,6 +31,7 @@ services:
             SQL_DB: ${SQL_DB}
             SQL_METADATA_CACHE_PATH: ${SQL_METADATA_CACHE_PATH}
             SQL_REQUIRED_TABLES: ${SQL_REQUIRED_TABLES}
+            SQL_ENDPOINT_ENABLED: ${SQL_ENDPOINT_ENABLED}
         volumes:
             - ./app:/app
             - ./assets:/app/assets
