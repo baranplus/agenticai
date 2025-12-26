@@ -59,27 +59,33 @@ class MongoDBManager:
         return record
     
     def full_text_search(
-            self, 
-            db_name : str, 
-            collection_name : str, 
-            query : str, 
-            filename : Optional[str] = None, 
-            top_k : int = 100
-        ) -> List[Document]:
+        self,
+        db_name: str,
+        collection_name: str,
+        query: str,
+        filenames: Optional[List[str]] = None,
+        top_k: int = 100
+    ) -> List[Document]:
 
-        search_query = {"$text": {"$search": query}}
+        search_query = {
+            "$text": {"$search": query}
+        }
 
-        if filename:
-            search_query["filename"] = filename
+        if filenames:
+            search_query["filename"] = {"$in": filenames}
 
         collection = self.get_mongodb_collection(db_name, collection_name)
-        cursor = collection.find(
-            search_query,
-            {"score": {"$meta": "textScore"}}
-        ).sort([("score", {"$meta": "textScore"})]).limit(top_k)
+
+        cursor = (
+            collection.find(
+                search_query,
+                {"score": {"$meta": "textScore"}}
+            )
+            .sort([("score", {"$meta": "textScore"})])
+            .limit(top_k)
+        )
 
         raw_docs = list(cursor)
-
         return self._process_query_returns(raw_docs)
 
     def get_file_from_gridfs_by_filename(self, db_name: str, collection : str, file_name: str, gridfs_collection : str = "files") -> Tuple[str, str, BytesIO]:
@@ -138,7 +144,7 @@ class MongoDBManager:
 
         return file_size, content_stream
 
-    def get_unique_field_values(self, db_name: str, collection_name: str, field_name: str) -> Set[Any]:
+    def get_unique_field_values(self, db_name: str, collection_name: str, field_name: str) -> Dict[str, int]:
 
         collection = self.get_mongodb_collection(db_name, collection_name)
 
@@ -158,9 +164,11 @@ class MongoDBManager:
         result = list(collection.aggregate(pipeline))
 
         if not result:
-            return set()
+            return dict()
 
-        return set(result[0].get("values", []))
+        unique_values = set(result[0].get("values", []))
+        unique_dict = { str(idx + 1): value for idx, value in enumerate(unique_values) }
+        return unique_dict
 
     def _process_query_returns(self, raw_docs: List[Dict[str, Any]]) -> List[Document]:
         langchain_docs = []

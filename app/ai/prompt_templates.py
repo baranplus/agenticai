@@ -137,3 +137,15 @@ PERSIAN_SQL_PROMPT = (
     "Do not include any explanations, only return the SQL query.\n\n"
     "SQL Query:"
 )
+
+FILENAME_DETECTION_PROMPT = (
+    "You are given a user query and a list of available files with numeric IDs.\n"
+    "User Query :\n"
+    "{question}\n\n"
+    "Available Files :\n"
+    "{available_files}\n\n"
+    "Task : \n"
+    "Select only the file IDs that are relevant to the user query.\n"
+    "Output Rules : \n"
+    "Return ONLY a comma-separated list of file IDs. If none are relevant, return an empty string."
+)

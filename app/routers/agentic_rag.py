@@ -46,13 +46,15 @@ async def query(
             "messages": [HumanMessage(content=request.message)],
             "vector_docs" : [],
             "full_text_docs" : [],
-            "sourcing" : {},
+            "sourcing_vector_search" : {},
+            "sourcing_full_text_search" : {},
+            "filtered_filenames" : [],
             "top_k" : request.top_k,
             "return_docs": request.return_docs,
             "weaviate_collection" : request.collection,
             "mongodb_dbname" : request.mongodb_db,
             "mongodb_files_collection" : request.mongodb_source_collection,
-            "mongodb_page_collection" : request.mongodb_source_collection,
+            "mongodb_page_collection" : request.mongodb_pdf_pages_collection,
             "mongodb_chunk_collection" : request.mongodb_text_collection
         }
 
@@ -60,7 +62,8 @@ async def query(
             "weaviate_manager" : weaviate_manager,
             "mongodb_manager" : mongodb_manager,
             "llm" : llm,
-            "embedding" : embedding
+            "embedding" : embedding,
+            "use_file_filtering" : request.use_file_filtering
         }
 
         response = agentic_graph.invoke(init_state, context=runtime_context)

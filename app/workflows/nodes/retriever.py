@@ -94,8 +94,7 @@ def retrieve_documents_by_vector_search(
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 
-    filename = None
-
+    filenames = state["filtered_filenames"]
     query = state["messages"][-1].content
     initial_question = state["messages"][0].content
     keywords = query.split(",")
@@ -115,14 +114,16 @@ def retrieve_documents_by_vector_search(
             "vector" : runtime.context.embedding.get_embeddings(keyword)
         }
     
-        if filename:
-            query_params["filters"] = Filter.by_property("filename").equal(filename)
+        if filenames != []:
+            query_params["filters"] = (Filter.by_property("filename").contains_any(filenames))
 
         response = runtime.context.weaviate_manager.query_params(state["weaviate_collection"], query_params)
         vector_search_docs.extend(response)
 
     vector_search_docs = sort_documents_by_score(vector_search_docs, state["top_k"])
     logger.info(f"Length docs vector search : {len(vector_search_docs)}")
+    for doc in vector_search_docs:
+        logger.info(f"Doc filename : {doc.metadata.get('filename')} - score : {doc.metadata.get('score')}")
     return { "vector_docs" : vector_search_docs }
 
 def retrieve_documents_by_fulltext_search(
@@ -132,8 +133,7 @@ def retrieve_documents_by_fulltext_search(
 
     """Query vector database. Use this for any question regarding national rules of IR"""
 
-    filename = None
-
+    filenames = state["filtered_filenames"]
     query = state["messages"][-1].content
     initial_question = state["messages"][0].content
     keywords = query.split(",")
@@ -150,11 +150,13 @@ def retrieve_documents_by_fulltext_search(
             state["mongodb_dbname"], 
             state["mongodb_chunk_collection"], 
             keyword,
-            filename,
+            filenames,
             state["top_k"]
         )
         fulltext_search_docs.extend(response)
     
     fulltext_search_docs = sort_documents_by_score(fulltext_search_docs, state["top_k"])
     logger.info(f"Length docs full-text search : {len(fulltext_search_docs)}")
+    for doc in fulltext_search_docs:
+        logger.info(f"Doc filename : {doc.metadata.get('filename')} - score : {doc.metadata.get('score')}")
     return { "full_text_docs" : fulltext_search_docs }
