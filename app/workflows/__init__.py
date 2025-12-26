@@ -1,8 +1,7 @@
 from langgraph.graph.state import CompiledStateGraph
 
-from .graph import WorkflowGraphBuilder
-from configs.env_configs import env_config
-
+from workflows.graph import WorkflowGraphBuilder
+from workflows.configs.agentic_rag import AGENTIC_RAG_WORKFLOW
 from .states import (
     AgenticRAGState,
     AgenticRAGContextSchema,
@@ -10,7 +9,11 @@ from .states import (
     SmartSQLPipelineContextSchema
 )
 
-agentic_rag_graph = WorkflowGraphBuilder(AgenticRAGState, AgenticRAGContextSchema).build_graph()
+agentic_rag_graph = WorkflowGraphBuilder(
+    state_schema=AgenticRAGState, 
+    context_schema=AgenticRAGContextSchema,
+    workflow_config=AGENTIC_RAG_WORKFLOW
+).build()
 
 def get_agentic_rag_graph() -> CompiledStateGraph:
     """Dependency provider for FastAPI."""
