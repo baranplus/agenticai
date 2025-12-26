@@ -1,6 +1,8 @@
 import re
 import urllib
 from langchain_core.messages import SystemMessage
+from langgraph.runtime import Runtime
+
 from workflows.states import AgenticRAGState, AgenticRAGContextSchema
 from configs.env_configs import env_config
 
@@ -59,7 +61,7 @@ def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
 
     return new_answer.strip() if has_sources else ""
 
-def show_source(state : AgenticRAGState):
+def show_source(state : AgenticRAGState, runtime : Runtime[AgenticRAGContextSchema]):
 
     for message in state["messages"]:
         if message.additional_kwargs.get("path") == "vector_search":
