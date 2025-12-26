@@ -99,7 +99,7 @@ async def download_page(
         encoded_filename = encoded_filename = urllib.parse.quote(filename)
 
         headers = {
-            'Content-Disposition': f'attachment;  filename*=UTF-8\'\'{encoded_filename}',
+            'Content-Disposition': f'inline; filename*=UTF-8\'\'{encoded_filename}',
             'Content-Length': file_size
         }
 

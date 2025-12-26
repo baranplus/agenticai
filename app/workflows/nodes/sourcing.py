@@ -1,3 +1,4 @@
+import os
 import re
 import urllib
 from langchain_core.messages import SystemMessage
@@ -55,8 +56,9 @@ def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
         file_id = src_meta.get("fileId")
         chunk_index = src_meta.get("chunk_index", 0)
         encoded_filename = urllib.parse.quote(filename)
+        sourcing_filename = f"{os.path.splitext(filename)[0]}_{chunk_index}.jpg"
         download_url = f"{env_config.source_download_api_path_base}/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{chunk_index}"
-        download_link = f"[{filename}]({download_url})"
+        download_link = f"![{sourcing_filename}]({download_url})"
         new_answer += f"{superscript} {download_link}\n"
 
     return new_answer.strip() if has_sources else ""
