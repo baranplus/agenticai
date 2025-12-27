@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import Response
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 import traceback
 
 from schema.request import AgenticRAGQueryRequest
@@ -43,7 +43,10 @@ async def query(
 
     try:
         init_state = {
-            "messages": [HumanMessage(content=request.message)],
+            "messages": [
+                HumanMessage(content=request.message),
+                AIMessage(content=request.keywords)
+            ],
             "vector_docs" : [],
             "full_text_docs" : [],
             "sourcing_vector_search" : {},

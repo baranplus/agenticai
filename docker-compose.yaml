@@ -44,7 +44,6 @@ services:
                 "0.0.0.0",
                 "--workers",
                 "1",
-                "--reload"
             ]
         restart: always
 

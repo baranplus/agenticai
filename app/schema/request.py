@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 class AgenticRAGQueryRequest(BaseModel):
     message: str
+    keywords : str
     collection: str
     use_local_embedding : bool = True
     use_file_filtering : bool = True
