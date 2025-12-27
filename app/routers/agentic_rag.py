@@ -26,19 +26,20 @@ async def query(
     request: AgenticRAGQueryRequest
 ):
 
-    if not weaviate_manager.check_collection_existence(request.collection):
+    if not weaviate_manager.check_collection_existence(request.weaviate_collection):
         
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Collection '{request.collection}' not found in the database."
         )
-    
-    if not mongodb_manager.check_db_existence(request.mongodb_db) or \
-        not mongodb_manager.check_collection_existence(request.mongodb_db, request.mongodb_text_collection) or \
-        not mongodb_manager.check_collection_existence(request.mongodb_db, request.mongodb_source_collection):
+
+    if not mongodb_manager.check_db_existence(request.mongodb_dbname) or \
+        not mongodb_manager.check_collection_existence(request.mongodb_dbname, request.mongodb_chunk_collection) or \
+        not mongodb_manager.check_collection_existence(request.mongodb_dbname, request.mongodb_files_collection) or \
+        not mongodb_manager.check_collection_existence(request.mongodb_dbname, request.mongodb_page_collection):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Database '{request.mongodb_db}' or Collections '{request.mongodb_source_collection}', '{request.mongodb_text_collection}' not found in the database."
+            detail=f"Database '{request.mongodb_dbname}' or Collections '{request.mongodb_files_collection}', '{request.mongodb_chunk_collection}', '{request.mongodb_page_collection}' not found in the database."
         )
 
     try:
@@ -54,11 +55,11 @@ async def query(
             "filtered_filenames" : [],
             "top_k" : request.top_k,
             "return_docs": request.return_docs,
-            "weaviate_collection" : request.collection,
-            "mongodb_dbname" : request.mongodb_db,
-            "mongodb_files_collection" : request.mongodb_source_collection,
-            "mongodb_page_collection" : request.mongodb_pdf_pages_collection,
-            "mongodb_chunk_collection" : request.mongodb_text_collection
+            "weaviate_collection" : request.weaviate_collection,
+            "mongodb_dbname" : request.mongodb_dbname,
+            "mongodb_files_collection" : request.mongodb_files_collection,
+            "mongodb_page_collection" : request.mongodb_page_collection,
+            "mongodb_chunk_collection" : request.mongodb_chunk_collection
         }
 
         runtime_context = {
