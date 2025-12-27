@@ -34,6 +34,7 @@ class Environment_Config:
     sql_required_tables : List[str]
     sql_endpoint_enabled : bool
     agentic_rag_workflow_config_path : str
+    smart_sql_workflow_config_path : str
     
     @classmethod
     def initialize(cls) -> "Environment_Config":
@@ -62,6 +63,7 @@ class Environment_Config:
         sql_required_tables = [table.strip() for table in os.environ.get("SQL_REQUIRED_TABLES").split(",") if table.strip()]
         sql_endpoint_enabled = os.environ.get("SQL_ENDPOINT_ENABLED").lower() == "true"
         agentic_rag_workflow_config_path = os.environ.get("AGENTIC_RAG_WORKFLOW_CONFIG_PATH")
+        smart_sql_workflow_config_path = os.environ.get("SMART_SQL_WORKFLOW_CONFIG_PATH")
         return cls(
             api_key = api_key,
             base_url = base_url,
@@ -86,7 +88,8 @@ class Environment_Config:
             sql_metadata_cache_path = sql_metadata_cache_path,
             sql_required_tables = sql_required_tables,
             sql_endpoint_enabled = sql_endpoint_enabled,
-            agentic_rag_workflow_config_path = agentic_rag_workflow_config_path
+            agentic_rag_workflow_config_path = agentic_rag_workflow_config_path,
+            smart_sql_workflow_config_path = smart_sql_workflow_config_path
         )
 
 env_config = Environment_Config.initialize()

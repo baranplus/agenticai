@@ -4,7 +4,6 @@ from langgraph.runtime import Runtime
 
 from workflows.states import SmartSQLPipelineState, SmartSQLPipelineContextSchema
 from ai.prompt_templates import PERSIAN_SQL_PROMPT
-from db import sql_manager
 from utils.logger import logger
 from configs.env_configs import env_config
 
@@ -16,7 +15,7 @@ def clean_sql(sql: str) -> str:
     # Remove Markdown code fences like ```sql ... ```
     return re.sub(r"^```(?:sql)?|```$", "", sql.strip(), flags=re.MULTILINE).strip()
 
-def generate_sql(question: str, llm : Any) -> str:
+def generate_sql(question: str, llm : Any, sql_manager : Any) -> str:
     """Generate SQL query from Persian question"""
 
     schema = sql_manager.get_combined_schema()
@@ -43,8 +42,8 @@ def execute_sql(state: SmartSQLPipelineState, runtime : Runtime[SmartSQLPipeline
     for _ in range(SQL_GENERATION_MAX_RETRIES):
         result = ""
         try:
-            sql_query = generate_sql(question, runtime.context.llm)
-            extracted_data = sql_manager.execute_sql(sql_query)
+            sql_query = generate_sql(question, runtime.context.llm, runtime.context.sql_manager)
+            extracted_data = runtime.context.sql_manager.execute_sql(sql_query)
 
             for row in extracted_data:
                 for key in row.keys():

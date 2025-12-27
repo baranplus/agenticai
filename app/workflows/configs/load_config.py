@@ -16,7 +16,7 @@ def load_workflow_config(
 
     edges = []
     for edge in config_data["edges"]:
-        src, dst = edge  # edge is a list/tuple of two strings, e.g. ["START", "extract_keywords"]
+        src, dst = edge 
         src = START if src == "START" else src
         dst = END if dst == "END" else dst
         edges.append((src, dst))
@@ -27,8 +27,10 @@ def load_workflow_config(
     #     for src, dst in config_data["edges"]
     # ]
 
+    conditional_edges_data = config_data.get("conditional_edges", [])
+
     conditional_edges = []
-    for edge in config_data["conditional_edges"]:
+    for edge in conditional_edges_data:
         condition_fn = condition_functions[edge["condition_fn"]]
         source = START if edge["source"] == "START" else edge["source"]
         conditional_edges.append(
