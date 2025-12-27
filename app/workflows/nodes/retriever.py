@@ -104,21 +104,40 @@ def retrieve_documents_by_vector_search(
 
     vector_search_docs = []
 
-    for keyword in keywords:
+    if runtime.context.use_basic_vector_search:
 
+        query = " ".join([keyword for keyword in keywords])
         query_params = {
-            "query": keyword,
+            "query": query,
             "limit": state["top_k"],
             "alpha": env_config.hybrid_search_alpha,
             "target_vector": "keywords_vector",
-            "vector" : runtime.context.embedding.get_embeddings(keyword)
+            "vector" : runtime.context.embedding.get_embeddings(query)
         }
-    
+
         if filenames != []:
             query_params["filters"] = (Filter.by_property("filename").contains_any(filenames))
 
         response = runtime.context.weaviate_manager.query_params(state["weaviate_collection"], query_params)
         vector_search_docs.extend(response)
+
+    else:
+
+        for keyword in keywords:
+
+            query_params = {
+                "query": keyword,
+                "limit": state["top_k"],
+                "alpha": env_config.hybrid_search_alpha,
+                "target_vector": "keywords_vector",
+                "vector" : runtime.context.embedding.get_embeddings(keyword)
+            }
+        
+            if filenames != []:
+                query_params["filters"] = (Filter.by_property("filename").contains_any(filenames))
+
+            response = runtime.context.weaviate_manager.query_params(state["weaviate_collection"], query_params)
+            vector_search_docs.extend(response)
 
     vector_search_docs = sort_documents_by_score(vector_search_docs, state["top_k"])
     logger.info(f"Length docs vector search : {len(vector_search_docs)}")

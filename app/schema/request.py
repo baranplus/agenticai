@@ -5,6 +5,7 @@ class AgenticRAGQueryRequest(BaseModel):
     keywords : str
     use_local_embedding : bool = True
     use_file_filtering : bool = True
+    use_basic_vector_search : bool = True
     top_k: int = 5
     return_docs: bool = False
     weaviate_collection: str

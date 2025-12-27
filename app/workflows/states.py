@@ -32,6 +32,7 @@ class AgenticRAGContextSchema:
     llm : LLM
     embedding : Embedding
     use_file_filtering : bool
+    use_basic_vector_search : bool
 
 @dataclass
 class SmartSQLPipelineContextSchema:

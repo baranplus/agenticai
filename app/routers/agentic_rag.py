@@ -67,7 +67,8 @@ async def query(
             "mongodb_manager" : mongodb_manager,
             "llm" : llm,
             "embedding" : embedding,
-            "use_file_filtering" : request.use_file_filtering
+            "use_file_filtering" : request.use_file_filtering,
+            "use_basic_vector_search" : request.use_basic_vector_search
         }
 
         response = agentic_graph.invoke(init_state, context=runtime_context)
