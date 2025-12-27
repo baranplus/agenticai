@@ -1,28 +1,35 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 from langchain_core.messages import HumanMessage
 import traceback
 
-from schema.request import GeneralQueryRequest
-from schema.response import GeneralResponse
-from agents.graph import build_graph_smart_sql
+from routers import SQLDatabaseManagerDependency, SmartRAGDependency, LLMDependency
 
+from schema.request import GeneralQueryRequest
 from utils.logger import logger
 
 router = APIRouter()
 
-smart_sql_graph = build_graph_smart_sql()
-
 @router.post("/query")
-async def query(request: GeneralQueryRequest):
+async def query(
+    sql_manager : SQLDatabaseManagerDependency,
+    smart_sql_graph : SmartRAGDependency,
+    llm : LLMDependency,
+    request: GeneralQueryRequest
+):
 
     try:
         init_state = {
             "messages": [HumanMessage(content=request.message)],
         }
 
-        response = smart_sql_graph.invoke(init_state)
+        runtime_context = {
+            "sql_manager" : sql_manager,
+            "llm" : llm,
+        }
 
-        return response["messages"][-1].content
+        response = smart_sql_graph.invoke(init_state, context=runtime_context)
+
+        return Response(content=response["messages"][-1].content, status_code=status.HTTP_201_CREATED)
         
     except Exception as e:
         error = traceback.format_exc()

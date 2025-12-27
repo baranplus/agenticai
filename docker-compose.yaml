@@ -12,16 +12,17 @@ services:
             API_KEY: ${API_KEY}
             BASE_URL: ${BASE_URL}
             GENERATION_MODEL: ${GENERATION_MODEL}
-            EMBEDDING_MODEL: ${EMBEDDING_MODEL}
             SQL_GENERATION_MODEL: ${SQL_GENERATION_MODEL}
+            EMBEDDING_URL: ${EMBEDDING_URL}
+            EMBEDDING_MODEL: ${EMBEDDING_MODEL}
             WEAVIATE_HOST: ${WEAVIATE_HOST}
             WEAVIATE_PORT: ${WEAVIATE_PORT}
+            WEAVIATE_GRPC_PORT: ${WEAVIATE_GRPC_PORT}
             WEAVIATE_USER_KEY: ${WEAVIATE_USER_KEY}
             HYBRID_SEARCH_ALPHA: ${HYBRID_SEARCH_ALPHA}
             MONGODB_URI: ${MONGODB_URI}
-            MONGODB_COLLECTION_SOURCE_FILES: ${MONGODB_COLLECTION_SOURCE_FILES}
-            MONGO_INITDB_DEV_USERNAME: ${MONGO_INITDB_DEV_USERNAME}
-            MONGO_INITDB_DEV_PASSWORD: ${MONGO_INITDB_DEV_PASSWORD}
+            MONGODB_INITDB_DEV_USERNAME: ${MONGODB_INITDB_DEV_USERNAME}
+            MONGODB_INITDB_DEV_PASSWORD: ${MONGODB_INITDB_DEV_PASSWORD}
             SOURCE_DOWNLOAD_API_PATH_BASE: ${SOURCE_DOWNLOAD_API_PATH_BASE}
             SQL_HOST: ${SQL_HOST}
             SQL_PORT: ${SQL_PORT}
@@ -29,7 +30,10 @@ services:
             SQL_PASS: ${SQL_PASS}
             SQL_DB: ${SQL_DB}
             SQL_METADATA_CACHE_PATH: ${SQL_METADATA_CACHE_PATH}
-            SQL_REQUIRED_TABLE: ${SQL_REQUIRED_TABLE}
+            SQL_REQUIRED_TABLES: ${SQL_REQUIRED_TABLES}
+            SQL_ENDPOINT_ENABLED: ${SQL_ENDPOINT_ENABLED}
+            AGENTIC_RAG_WORKFLOW_CONFIG_PATH: ${AGENTIC_RAG_WORKFLOW_CONFIG_PATH}
+            SMART_SQL_WORKFLOW_CONFIG_PATH: ${SMART_SQL_WORKFLOW_CONFIG_PATH}
         volumes:
             - ./app:/app
             - ./assets:/app/assets
@@ -40,7 +44,7 @@ services:
                 "--host",
                 "0.0.0.0",
                 "--workers",
-                "1"
+                "1",
             ]
         restart: always
 

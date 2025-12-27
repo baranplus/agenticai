@@ -1,9 +1,11 @@
 import gridfs
+import base64
 from io import BytesIO
 from pymongo import MongoClient
 from pymongo.database import Database as MongoDBDatabase
 from pymongo.collection import Collection as MongoDBCollection
-from typing import List, Dict, Any, Tuple, Optional
+from langchain.schema import Document
+from typing import List, Dict, Any, Tuple, Optional, Set
 
 class MongoDBManager:
 
@@ -45,48 +47,144 @@ class MongoDBManager:
             return False
         return True
     
-    def full_text_search(self, db_name : str, collection_name : str, query : str, source : Optional[str] = None, top_k : int = 100) -> List[Dict[str, Any]]:
-        search_query = {"$text": {"$search": query}}
-        if source:
-            search_query["filename"] = source
-
-
+    def get_all_records(self, db_name : str, collection_name : str) -> List[Dict[str, any]]:
         collection = self.get_mongodb_collection(db_name, collection_name)
-        cursor = collection.find(
-            search_query,
-            {"score": {"$meta": "textScore"}}
-        ).sort([("score", {"$meta": "textScore"})]).limit(top_k)
-
-        found_docs = []
-        for doc in cursor:
-            found_docs.append(doc)
-
+        cursor = collection.find()
+        found_docs = [doc for doc in cursor]
         return found_docs
-    
-    def get_file_source(self, db_name: str, file_name: str, collection_name: str = "source_files") -> Tuple[str, BytesIO]:
+
+    def get_record(self, db_name : str, collection_name : str, search_record : Dict[str, Any]) -> Dict[str, Any]:
         collection = self.get_mongodb_collection(db_name, collection_name)
-        
-        document = collection.find_one({"filename": file_name})
-        if document is None:
-            raise FileNotFoundError(f"File '{file_name}' not found.")
+        record = collection.find_one(search_record)
+        return record
+    
+    def full_text_search(
+        self,
+        db_name: str,
+        collection_name: str,
+        query: str,
+        filenames: Optional[List[str]] = None,
+        top_k: int = 100
+    ) -> List[Document]:
 
-        file_id = document.get("gridfs_id")
-        if not file_id:
-            raise FileNotFoundError(f"GridFS ID missing for file '{file_name}'")
+        search_query = {
+            "$text": {"$search": query}
+        }
 
-        # Open GridFS bucket
+        if filenames:
+            search_query["filename"] = {"$in": filenames}
+
+        collection = self.get_mongodb_collection(db_name, collection_name)
+
+        cursor = (
+            collection.find(
+                search_query,
+                {"score": {"$meta": "textScore"}}
+            )
+            .sort([("score", {"$meta": "textScore"})])
+            .limit(top_k)
+        )
+
+        raw_docs = list(cursor)
+        return self._process_query_returns(raw_docs)
+
+    def get_file_from_gridfs_by_filename(self, db_name: str, collection : str, file_name: str, gridfs_collection : str = "files") -> Tuple[str, str, BytesIO]:
+
         db = self.get_mongodb_db(db_name)
-        fs = gridfs.GridFS(db)
+        collection = self.get_mongodb_collection(db_name, collection)
+
+        file_doc = collection.find_one({"filename" : file_name})
+
+        if file_doc is None:
+            raise FileNotFoundError(f"GridFS file '{file_name}' not found in fs.files")
+
+        file_id = file_doc["_id"]
+        filename = file_doc["filename"]
+
+        fs = gridfs.GridFS(db, collection=gridfs_collection)
 
         try:
             grid_out = fs.get(file_id)
         except Exception:
-            raise FileNotFoundError(f"File data not found in GridFS for '{file_name}'")
+            raise FileNotFoundError(f"Failed to read GridFS file '{file_name}'")
 
         file_bytes = grid_out.read()
         content_stream = BytesIO(file_bytes)
 
-        # file_size = str(document.get("file_size", len(file_bytes)))
+        file_size = str(file_doc.get("length", len(file_bytes)))
+
+        return file_size, filename, content_stream
+
+    def get_file_from_collection(
+        self, 
+        db_name: str,
+        collection_name: str,
+        search_record : Dict[str, Any],
+        buffer_field: str = "originalBuffer"
+    ) -> Tuple[str, BytesIO]:
+
+        collection = self.get_mongodb_collection(db_name, collection_name)
+
+        document = collection.find_one(search_record)
+        if document is None:
+            raise FileNotFoundError(f"File '{search_record}' not found.")
+
+        base64_data = document.get(buffer_field)
+        if not base64_data:
+            raise FileNotFoundError(f"No binary data found for '{search_record}'")
+
+        try:
+            file_bytes = base64.b64decode(base64_data)
+        except Exception:
+            raise FileNotFoundError("originalBuffer is not valid base64")
+
+        content_stream = BytesIO(file_bytes)
+
         file_size = str(len(file_bytes))
 
         return file_size, content_stream
+
+    def get_unique_field_values(self, db_name: str, collection_name: str, field_name: str) -> Dict[str, int]:
+
+        collection = self.get_mongodb_collection(db_name, collection_name)
+
+        match_filter: Dict[str, Any] = {
+            field_name: {"$exists": True, "$nin": [None, ""]}
+        }
+
+        pipeline = [
+            {"$match": match_filter},
+            {"$group": {
+                "_id": None,
+                "values": {"$addToSet": f"${field_name}"}
+            }},
+            {"$project": {"_id": 0, "values": 1}}
+        ]
+
+        result = list(collection.aggregate(pipeline))
+
+        if not result:
+            return dict()
+
+        unique_values = set(result[0].get("values", []))
+        unique_dict = { str(idx + 1): value for idx, value in enumerate(unique_values) }
+        return unique_dict
+
+    def _process_query_returns(self, raw_docs: List[Dict[str, Any]]) -> List[Document]:
+        langchain_docs = []
+
+        for obj in raw_docs:
+
+            page_content = obj.get("content", "")
+            metadata = {}
+
+            for key, value in obj.items():
+                if key != "content":
+                    metadata[key] = value
+
+            metadata["uuid"] = str(obj.get("_id"))
+
+            doc = Document(page_content=page_content, metadata=metadata)
+            langchain_docs.append(doc)
+
+        return langchain_docs
