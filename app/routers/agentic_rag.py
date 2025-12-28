@@ -28,18 +28,51 @@ async def query(
 
     if not weaviate_manager.check_collection_existence(request.weaviate_collection):
         
+        logger.warning(
+            "Invalid weaviate collection",
+            extra={
+                "collection": request.weaviate_collection,
+                "endpoint": "/api/v1/query",
+            }
+        )
+
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Collection '{request.weaviate_collection}' not found in the database."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error_code": "WEAVIATE_COLLECTION_NOT_FOUND",
+                "missing_collection": request.weaviate_collection
+            }
         )
 
     if not mongodb_manager.check_db_existence(request.mongodb_dbname) or \
         not mongodb_manager.check_collection_existence(request.mongodb_dbname, request.mongodb_chunk_collection) or \
         not mongodb_manager.check_collection_existence(request.mongodb_dbname, request.mongodb_files_collection) or \
         not mongodb_manager.check_collection_existence(request.mongodb_dbname, request.mongodb_page_collection):
+
+        logger.warning(
+            "Invalid mongodb db or collections",
+            extra={
+                "db": request.mongodb_dbname,
+                "files_collection": request.mongodb_files_collection,
+                "chunk_collection": request.mongodb_chunk_collection,
+                "page_collection": request.mongodb_page_collection,
+                "endpoint": "/api/v1/query",
+            }
+        )
+
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Database '{request.mongodb_dbname}' or Collections '{request.mongodb_files_collection}', '{request.mongodb_chunk_collection}', '{request.mongodb_page_collection}' not found in the database."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error_code": "MONGODB_RESOURCE_NOT_FOUND",
+                "missing": {
+                    "db": request.mongodb_dbname,
+                    "collections": [
+                        request.mongodb_files_collection,
+                        request.mongodb_chunk_collection,
+                        request.mongodb_page_collection,
+                    ]
+                }
+            }
         )
 
     try:
