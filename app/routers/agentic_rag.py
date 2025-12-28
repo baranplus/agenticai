@@ -30,7 +30,7 @@ async def query(
         
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Collection '{request.collection}' not found in the database."
+            detail=f"Collection '{request.weaviate_collection}' not found in the database."
         )
 
     if not mongodb_manager.check_db_existence(request.mongodb_dbname) or \
