@@ -3,7 +3,7 @@ from pathlib import Path
 from langgraph.graph import START, END
 from workflows.graph import WorkflowConfig, ConditionalEdgeConfig
 
-from langgraph.graph import START, END  # Import the real constants
+from langgraph.graph import START, END
 
 def load_workflow_config(
     config_path: str,
@@ -20,12 +20,6 @@ def load_workflow_config(
         src = START if src == "START" else src
         dst = END if dst == "END" else dst
         edges.append((src, dst))
-
-    # Or more concisely:
-    # edges = [
-    #     (START if src == "START" else src, END if dst == "END" else dst)
-    #     for src, dst in config_data["edges"]
-    # ]
 
     conditional_edges_data = config_data.get("conditional_edges", [])
 

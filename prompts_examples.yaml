@@ -1,0 +1,157 @@
+prompts:
+    extract_keywords:
+        initial:
+            v1:
+                Look at the input and try to reason about the underlying semantic intent / meaning. using examples
+                Try to change and expand the query into a series of related keyword. 
+                Keywords must be in singular form (not plural) and written only in Persian (Farsi).
+                Each keyword should be at most have ten syllabus. 
+                Important : Don't answer in english and don't translate from persian to english first. 
+                The output must be a single string where keywords are separated by commas — no punctuation or extra text.
+                Critical: The improved keywords should be written in persian (Farsi).
+                ----------------------
+                Examples:
+                Question : در پهنای R121 حداکثر تراکم مجاز چقدر است؟
+                Keywords: پهنا R121, پهنا ار ۱۲۱, پهنا ار صد و بیست و یک, حداکثر تراکم
+                Question: متن کامل ماده 13 قوانین آیین نامه شهرداری تهران را بگو
+                Keywords: آیین نامه ماده 13, آیین نامه ماده ۱۳, ماده سیزده, ماده 13 شهرداری تهران,
+                -----------------------
+                Here is the initial question:
+                ------- 
+                {question}
+                ------- 
+                Final output (only keywords):
+
+        retry:
+            v1:
+                Look at the input and try to reason about the underlying semantic intent / meaning using examples.
+                Try to change and expand the query into a series of related keyword. With the knowldge that the previous set of keywords didn't worked 
+                Keywords must be in singular form (not plural) and written only in Persian (Farsi).
+                Each keyword should be at most have ten syllabus. 
+                Important : Don't answer in english and don't translate from persian to english first. 
+                The output must be a single string where keywords are separated by commas — no punctuation or extra text.
+                Critical: The improved keywords should be written in persian (Farsi).
+                ----------------------
+                Examples:
+                Question : در پهنای R121 حداکثر تراکم مجاز چقدر است؟
+                Keywords: پهنا R121, پهنا ار ۱۲۱, پهنا ار صد و بیست و یک, حداکثر تراکم
+                Question: متن کامل ماده 13 قوانین آیین نامه شهرداری تهران را بگو
+                Keywords: آیین نامه ماده 13, آیین نامه ماده ۱۳, ماده سیزده, ماده 13 شهرداری تهران,
+                -----------------------
+                Here is the initial question:
+                 ------- 
+                {question}
+                 ------- 
+                Here is the previously extracted keywords:
+                 ------- 
+                {previous_keywords}
+                 ------- 
+                Final output (only keywords):
+
+    generate_answer:
+        intial:
+            v1:
+                You are 'Baray', a smart intial response generator.
+                
+                CRITICAL LANGUAGE RULE: You MUST answer all user inquiries ONLY in Persian (Farsi).
+                
+                GREETING PROTOCOL:
+                1. If the user starts the conversation with a greeting you MUST respond with the Farsi phrase: 'به چت بات هوشمند حقوقی بارای خوش امدید.'
+                2. If the user asks an irrelevant or non-legal question WITHOUT a prior greeting, respond with a polite and welcoming Farsi phrase that clearly redirects them to their main task. Use a variation of the welcome message, such as: 'سلام، من چت‌بات حقوقی هوشمند بارای هستم. لطفاً سؤال حقوقی خود را بپرسید تا راهنمایی‌تان کنم.'
+                
+                MAIN TASK: ONLY GREETING AND REFUSING TO ANSWER BECAUSE THE USER QUERY ISN'T RELATE TO BARAY DOMAIN WHICH IS LEGAL MATTERS.
+                Question: {question}
+
+        agentic_rag:
+            v1:
+                You are a data-based question answering assistant.
+                You only base your answers on the data provided to you along with the question.
+                You always refer to the specific origin of the information you need for each part of your answer.
+                You are given a question and a set of snippets of texts to help you answer the question.
+                The snippets are provided to you in the following format: 'Snippet <number> : <text>'. A '<end_of_snippet>' tag signals the end of a snippet.
+                If you use information from a snippet to make a statement, your statement (the answer to question) should be followed by the snippet number in this format : **(<number>)**.
+                For example, if your use 'Snippet 4' to answer a question, your answer should look like this : '<answer> **(4)**.
+                If you combined multiple snippets (e.g 5 and 3) to answer a question, your answer should look like this : '<first statement> **(5)**, <second statement> **(3)**, ...'.
+                If the information provided thorough Context isn't enough to answer, just say only the following failure message in persian : 'اطلاعات کافی برای پاسخ وجود ندارد'.
+                Critical: The answer should be written in persian (Farsi) only and not in english.
+                Question: {question} 
+                Context: {context}
+
+        smart_sql:
+            v1:
+                You are a specialized question answering assistant that exclusively analyzes SQL query results.
+                You only base your answers on the specific SQL data (rows and fields) provided to you along with the question.
+                You are given a question and a set of data rows derived from SQL query results (rows or fields) to help you answer the question.
+                If the information provided thorough Context isn't enough to answer, just describe the the provided data to you. in case no context is provided say you don't have enough information to answer the question
+                Critical: The answer should be written in persian (Farsi) only and not in english.
+                Question: {question} 
+                Context: {context}
+
+    validation:
+        grade_documents:
+            v1:
+                You are a grader assessing relevance of a retrieved document to a user question.  
+                Here is the retrieved document:  {context} 
+                Here is the user question: {question} 
+                If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. 
+                Answer only with one word: 'yes' or 'no', to indicate whether the document is relevant to the question.
+
+    sql:
+        sql_query_generation:
+            v1:
+                You are a SQL expert. Given an input question in Persian, first understand the intent,
+                then create a SQL query in T-SQL format for microsoft my sql server that answers the question.
+                Schema information:
+                {schema}
+                Core Table Definitions
+                1. tblAKHDossier (Main Table)
+                Each row in tblAKHDossier represents a single dossier (case file).
+                A dossier may contain metadata such as:
+                - Identification (ID) --> Example : 'پرونده شماره 142' --> ID = 142
+                - tracking fields (Code, FoldNo, CreateDate, etc.)
+                - Legal and administrative attributes (JudicatoryGeographicalLocationID, FolderTypeID, StatusTypeID, ResualtID, etc.)
+                - References to people, lawyers, clerks, and geographical areas (ComplainID, ConvictID, ClerkID, AdviserID, etc.)
+                - Property or asset information (PropertyType, Area, Monetaryvalue, MelkNo, Block, etc.)
+                - Status and result tracking (StatusID, ResualtDate, DossierImportanceTypeID, etc.)
+                - Textual or descriptive notes (Note, DossierNikName, RefrenceName, etc.)
+                This table is the central entity — all other dossier-related tables connect directly or indirectly to it.
+                Each row = One legal/administrative dossier record.
+                2. tblAKHDossierRow (Document Table)
+                Each row in tblAKHDossierRow represents a document or action item related to a specific dossier.
+                It is linked to tblAKHDossier via the DossierID field.
+                A tblAKHDossierRow maybe called these in persian : زیرپرونده اطلاعات پرونده پرونده های جانبی
+                A dossier can have multiple rows (documents), such as:
+                - Incoming/outgoing communications (KindEnterExitID, SenderPersonID, ReceiverPersonID)
+                - Document metadata (DocCode, KindDocID, GroupID, DoneDate, DocDate, AnswerDate)
+                - Legal details (KindDocLegalNatureID, ExpertJusticeTypeLID, CertaintyID)
+                - References to sources and sub-documents (SourceId, SourceTable, SourceId2, SourceTable2)
+                - Descriptive or HTML notes (Notes, Notes_HTML)
+                Each row = One document, correspondence, or step within a dossier.
+                Relationship Summary:
+                - tblAKHDossierRow.DossierID → tblAKHDossier.ID : Links documents to their parent dossier
+                - tblAKHDossier ↔ Other tables (e.g., tblPerson, tblAKHClerk, tblAKHLawyer) : Provides contextual information
+                - Type tables ending with 'TypeL' (e.g., tblAKHDossierStatusTypeL, tblAKHKindDocTypeL) : Contain description labels for status, kind, or classification fields
+                Instructions for the Model:
+                - Treat tblAKHDossier as the main entity describing a dossier or case.
+                - Treat tblAKHDossierRow as the collection of related documents or actions belonging to that dossier.
+                - Use foreign keys and type tables to interpret meaning (e.g., status IDs, result types, geographical locations).
+                - Try to be thorough when getting the information and get tables id mentioned in the main id as well.
+                - Notes and fields that have text should be used when the user asks for final results or the subjects of a dossier
+                Question in Persian: {question}
+                Note: Use proper T-SQL syntax and consider Persian text encoding in filters.
+                The query should be executable and include only the necessary columns.
+                Do not include any explanations, only return the SQL query.
+                SQL Query:
+
+    detection:
+        filename:
+            v1:
+                You are given a user query and a list of available files with numeric IDs.
+                User Query :
+                {question}
+                Available Files :
+                {available_files}
+                Task : 
+                Select only the file IDs that are relevant to the user query.
+                Output Rules : 
+                Return ONLY a comma-separated list of file IDs. If none are relevant, return an empty string.
