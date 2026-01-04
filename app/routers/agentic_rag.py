@@ -9,7 +9,8 @@ from routers import (
     MongoDBManagerDependency,
     LLMDependency,
     EmbeddingDependency,
-    AgenticRagDependency
+    AgenticRagDependency,
+    PromptRegistryDependency
 )
 
 from utils.logger import logger
@@ -23,6 +24,7 @@ async def query(
     llm : LLMDependency,
     embedding : EmbeddingDependency,
     agentic_graph : AgenticRagDependency,
+    prompt_registry : PromptRegistryDependency,
     request: AgenticRAGQueryRequest
 ):
 
@@ -101,7 +103,8 @@ async def query(
             "llm" : llm,
             "embedding" : embedding,
             "use_file_filtering" : request.use_file_filtering,
-            "use_basic_vector_search" : request.use_basic_vector_search
+            "use_basic_vector_search" : request.use_basic_vector_search,
+            "prompt_registry" : prompt_registry
         }
 
         response = agentic_graph.invoke(init_state, context=runtime_context)

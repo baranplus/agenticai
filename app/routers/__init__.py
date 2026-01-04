@@ -11,7 +11,7 @@ from db import (
     SQLDatabaseManager
 )
 
-from ai import get_llm, get_embedding, LLM, Embedding
+from ai import get_llm, get_embedding, get_prompt_registry, LLM, Embedding, PromptRegistry
 from workflows import get_agentic_rag_graph, get_smart_sql_graph
 
 WeaviateClientDependency = Annotated[WeaviateClientManager, Depends(get_weaviate_client_manager)]
@@ -21,3 +21,4 @@ LLMDependency = Annotated[LLM, Depends(get_llm)]
 EmbeddingDependency = Annotated[Embedding, Depends(get_embedding)]
 AgenticRagDependency = Annotated[CompiledStateGraph, Depends(get_agentic_rag_graph)]
 SmartRAGDependency = Annotated[CompiledStateGraph, Depends(get_smart_sql_graph)]
+PromptRegistryDependency = Annotated[PromptRegistry, Depends(get_prompt_registry)]

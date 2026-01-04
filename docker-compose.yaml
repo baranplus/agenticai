@@ -34,6 +34,7 @@ services:
             SQL_ENDPOINT_ENABLED: ${SQL_ENDPOINT_ENABLED}
             AGENTIC_RAG_WORKFLOW_CONFIG_PATH: ${AGENTIC_RAG_WORKFLOW_CONFIG_PATH}
             SMART_SQL_WORKFLOW_CONFIG_PATH: ${SMART_SQL_WORKFLOW_CONFIG_PATH}
+            PROMPTS_PATH: ${PROMPTS_PATH}
         volumes:
             - ./app:/app
             - ./assets:/app/assets

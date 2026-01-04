@@ -2,13 +2,12 @@ from langgraph.runtime import Runtime
 from langchain_core.messages import AIMessage
 
 from workflows.states import AgenticRAGState, AgenticRAGContextSchema
-from ai.prompt_templates import EXTRACT_KEYWORDS_INITIAL_PROMPT, EXTRACT_KEYWORDS_PROMPT
 from configs.env_configs import env_config
 
 def extract_keywords_initial(state: AgenticRAGState, runtime : Runtime[AgenticRAGContextSchema]):
     """Rewrite the original user question."""
     question = state["messages"][0].content
-    prompt = EXTRACT_KEYWORDS_INITIAL_PROMPT.format(question=question)
+    prompt = runtime.context.prompt_registry.get("extract_keywords", "initial", "v1").format(question=question)
     response = runtime.context.llm.get_completions(
         model_name=env_config.generation_model,
         temperature=0.0,
@@ -20,7 +19,7 @@ def extract_keywords(state: AgenticRAGState, runtime : Runtime[AgenticRAGContext
     """Rewrite the original user question."""
     question = state["messages"][0].content
     previous_keywords = state["messages"][-2].content
-    prompt = EXTRACT_KEYWORDS_PROMPT.format(question=question, previous_keywords=previous_keywords)
+    prompt = runtime.context.prompt_registry.get("extract_keywords", "retry", "v1").format(question=question, previous_keywords=previous_keywords)
     response = runtime.context.llm.get_completions(
         model_name=env_config.generation_model,
         temperature=0.0,

@@ -5,7 +5,7 @@ from langgraph.graph.message import add_messages
 from typing import Annotated, TypedDict, List
 
 from db import WeaviateClientManager, MongoDBManager,SQLDatabaseManager
-from ai import LLM, Embedding
+from ai import LLM, Embedding, PromptRegistry
 
 class AgenticRAGState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
@@ -33,8 +33,10 @@ class AgenticRAGContextSchema:
     embedding : Embedding
     use_file_filtering : bool
     use_basic_vector_search : bool
+    prompt_registry : PromptRegistry
 
 @dataclass
 class SmartSQLPipelineContextSchema:
     sql_manager : SQLDatabaseManager
     llm : LLM
+    prompt_registry : PromptRegistry
