@@ -1,24 +1,28 @@
 # Agentic RAG System
 
-This project implements an Agentic RAG (Retrieval-Augmented Generation) system using FastAPI and Weaviate. The system features a sophisticated agent-based architecture for improved query processing and response generation.
+This project implements an Agentic RAG (Retrieval-Augmented Generation) system using FastAPI, LangGraph workflows, and Weaviate. The system features a sophisticated workflow-based architecture with specialized nodes for improved query processing and response generation.
 
 ## Features
 
-- Agent-based RAG architecture with multiple specialized nodes:
-  - Question rewriting for improved retrieval
-  - Document grading for relevance assessment
-  - Source attribution with downloadable references
+- **Workflow-based RAG Architecture** with specialized processing nodes:
+  - Question rewriting and keyword extraction for improved retrieval
+  - Document retrieval and relevance assessment from vector stores
+  - Source attribution with downloadable document references
   - Natural language to SQL query conversion
-- Persian (Farsi) language support with proper text handling
-- Integrated document storage and retrieval:
-  - Weaviate for vector search
-  - MongoDB for source document storage
-  - SQL Server for structured data querying
-  - Downloadable source documents with UTF-8 support
-- Docker containerization for easy deployment
-- Authentication for data stores
-- SQL schema caching for optimized query performance
-- Interactive Weaviate UI for:
+  - Decision points for intelligent routing between RAG and SQL modes
+  - Answer generation with source citations
+- **Multi-language Support**: Optimized for Persian (Farsi) and other languages with proper text handling
+- **Integrated Data Source Support**:
+  - **Weaviate**: Vector search for document retrieval with hybrid search capabilities
+  - **MongoDB**: Source document storage with metadata support
+  - **SQL Server**: Structured data querying with schema caching for performance
+  - **Downloadable Sources**: UTF-8 encoded file support for Persian/Arabic filenames
+- **Production-Ready Deployment**:
+  - Docker containerization with Docker Compose orchestration
+  - Authentication for all data stores
+  - SQL schema caching for optimized query performance
+  - Configurable workflow parameters via YAML files
+- **Interactive Weaviate UI**: Streamlit-based interface for:
   - Visual exploration of document collections
   - Advanced hybrid search capabilities
   - Source-based filtering and statistics
@@ -26,237 +30,520 @@ This project implements an Agentic RAG (Retrieval-Augmented Generation) system u
 
 ## Prerequisites
 
-- Docker and Docker Compose
+### For Local Development
 - Python 3.12+
-- Make sure port 8700 (API) is available
-- Weaviate should be accessible at port 8500 on the configured host
+- pip/poetry for dependency management
+- Access to external services (LLM API, Weaviate, MongoDB, SQL Server)
+
+### For Docker Deployment
+- Docker 20.10+
+- Docker Compose 2.0+
+- Ports 8700, 8501 available (configurable via `.env`)
+- Network connectivity to external services (Weaviate, MongoDB, SQL Server)
 
 ## Project Structure
 
 ```
 .
 ├── app/
-│   ├── agents/          # Agent-based RAG components
-│   │   ├── rewrite_question_node.py  # Question optimization
-│   │   ├── retriever_node.py        # Document retrieval
-│   │   ├── grade_document_node.py   # Relevance assessment
-│   │   ├── sourcing_node.py        # Source attribution and links
-│   │   ├── sql_node.py             # SQL query handling
-│   │   └── generate_answer_node.py  # Answer generation
-│   ├── db/             # Database implementations
-│   │   ├── vector_store.py         # Weaviate integration
-│   │   ├── client.py              # MongoDB integration
-│   │   ├── sql_client.py          # SQL Server integration
-│   │   └── collection.py          # Collection management
-│   ├── llm/            # LLM configurations and templates
-│   ├── routers/        # FastAPI routes
-│   │   ├── agentic_rag.py        # Main query endpoint
-│   │   ├── download_source.py    # Source file downloads
-│   │   └── smart_sql.py         # SQL query handling
-│   ├── schema/         # Data models and validation
-│   └── utils/          # Utility functions
-├── assets/            # Required folder for SQL schema cache
-│   └── schema_cache.json  # SQL database schema cache
-├── weaviate_ui/       # Interactive UI for Weaviate
-│   ├── app.py         # Streamlit application
-│   ├── Dockerfile     # UI service container
-│   └── requirements.txt # UI dependencies
-├── docker-compose.yaml
-├── Dockerfile.Base
-└── requirements.txt
+│   ├── ai/                     # AI/LLM integrations
+│   │   ├── embedding.py        # Embedding model configurations
+│   │   ├── llm.py             # LLM provider setup
+│   │   └── prompts.py         # System prompts and templates
+│   ├── db/                     # Database clients
+│   │   ├── mongodb_client.py   # MongoDB integration for source documents
+│   │   ├── sql_client.py       # SQL Server integration for structured data
+│   │   ├── weaviate_client.py  # Weaviate vector store integration
+│   │   └── __init__.py
+│   ├── workflows/              # LangGraph workflow definitions
+│   │   ├── graph.py           # Main workflow graph orchestration
+│   │   ├── states.py          # Workflow state definitions
+│   │   ├── configs/           # Workflow configuration loaders
+│   │   │   ├── agentic_rag.py      # RAG workflow config
+│   │   │   ├── smart_sql.py        # SQL workflow config
+│   │   │   ├── load_config.py      # Config file loader utility
+│   │   │   └── __init__.py
+│   │   ├── nodes/             # Workflow processing nodes
+│   │   │   ├── extract_keywords.py    # Extract search keywords from queries
+│   │   │   ├── retriever.py           # Document retrieval from Weaviate
+│   │   │   ├── generate_answer.py     # LLM-based answer generation
+│   │   │   ├── sourcing.py           # Source attribution and link generation
+│   │   │   ├── sql.py                # SQL query generation and execution
+│   │   │   ├── decision_point.py     # RAG vs SQL routing logic
+│   │   │   ├── filename_detection.py # Source document identification
+│   │   │   ├── merge.py              # Result merging and deduplication
+│   │   │   ├── return_docs.py        # Document collection return logic
+│   │   │   └── __init__.py
+│   │   └── __init__.py
+│   ├── routers/                # FastAPI route handlers
+│   │   ├── agentic_rag.py     # Main /api/v1/query endpoint
+│   │   ├── download_source.py # /api/v1/download endpoint
+│   │   ├── smart_sql.py       # /api/v1/sql/query endpoint (optional)
+│   │   └── __init__.py
+│   ├── schema/                 # Request/response data models
+│   │   ├── request.py         # Input validation schemas
+│   │   ├── response.py        # Output response schemas
+│   │   └── __init__.py
+│   ├── configs/                # Application configuration
+│   │   ├── env_configs.py     # Environment variable loading
+│   │   └── __init__.py
+│   ├── utils/                  # Utility functions
+│   │   ├── logger.py          # Logging setup
+│   │   └── __init__.py
+│   ├── main.py                # FastAPI application entry point
+│   └── __init__.py
+├── assets/                     # Runtime configuration and cache files
+│   ├── agentic_rag_config_custom.yaml     # Custom RAG workflow config
+│   ├── agentic_rag_config.yaml            # Default RAG workflow config
+│   ├── smart_sql_config.yaml              # SQL workflow configuration
+│   ├── prompts.yaml                       # LLM prompts and templates
+│   └── schema_cache.json                  # Cached SQL database schema
+├── weaviate_ui/                # Streamlit UI for Weaviate exploration
+│   ├── app.py                 # Streamlit application
+│   ├── Dockerfile             # UI container definition
+│   ├── requirements.txt        # UI dependencies
+│   └── README.md
+├── docker-compose.yaml         # Docker Compose service orchestration
+├── Dockerfile.Base             # Base Docker image definition
+├── requirements.txt            # Python dependencies
+└── README.md                   # This file
 ```
 
 ## Environment Setup
 
-1. Create a `.env` file in the project root with the following structure:
+### 1. Create `.env` File
+
+Create a `.env` file in the project root with the following configuration:
 
 ```env
-# Docker Services
+# ============================================================================
+# Docker Service Configuration
+# ============================================================================
 APP_IMAGE=agentic_rag:1.0.0
 WEAVIATE_UI_IMAGE=weaviate_ui:1.0.0
 APP_PORT=8700
 WEAVIATE_UI_PORT=8501
 
-# LLM Configuration
-API_KEY=your_api_key
-BASE_URL=your_base_url
-GENERATION_MODEL=your_model_name
-EMBEDDING_MODEL=your_embedding_model
+# ============================================================================
+# LLM Provider Configuration
+# ============================================================================
+# Choose one LLM provider configuration below
 
+## Option 1: OpenRouter (Recommended)
+API_KEY=sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BASE_URL=https://openrouter.ai/api/v1
+GENERATION_MODEL=openai/gpt-4o
+SQL_GENERATION_MODEL=openai/gpt-4-turbo
+
+## Option 2: AvalAI (Alternative)
+# API_KEY=aa-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# BASE_URL=https://api.avalai.ir/v1
+# GENERATION_MODEL=gpt-4o
+# SQL_GENERATION_MODEL=gpt-4-turbo
+
+# ============================================================================
+# Embedding Model Configuration
+# ============================================================================
+# Use external embedding service or local embeddings
+EMBEDDING_URL=http://embedding-service-host:port/v1/embeddings
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+
+# ============================================================================
 # Weaviate Configuration
-WEAVIATE_HOST=weaviate
-WEAVIATE_PORT=port
-WEAVIATE_USER_KEY=root_user_key
-HYBRID_SEARCH_ALPHA= 1.0 pure vector search, 0.0 pure keyword search
+# ============================================================================
+WEAVIATE_HOST=weaviate-host-ip-or-domain
+WEAVIATE_PORT=8100
+WEAVIATE_GRPC_PORT=50052
+WEAVIATE_USER_KEY=your-weaviate-user-key
+HYBRID_SEARCH_ALPHA=0.25  # 0.0=pure keyword, 0.5=balanced, 1.0=pure vector
 
+# ============================================================================
 # MongoDB Configuration
-MONGODB_URI=mongodb://host:port
-MONGODB_DB_NAME=db name
-MONGODB_COLLECTION_SOURCE_FILES=collection source files name
-MONGO_INITDB_DEV_USERNAME=root user
-MONGO_INITDB_DEV_PASSWORD=root password
+# ============================================================================
+MONGODB_URI=mongodb://mongodb-host:port
+MONGODB_INITDB_DEV_USERNAME=root
+MONGODB_INITDB_DEV_PASSWORD=your-mongodb-password
 
-# Source Download API Configuration
-SOURCE_DOWNLOAD_API_PATH_BASE=http://host:port/api/v1/download
+# ============================================================================
+# SQL Server Configuration
+# ============================================================================
+SQL_HOST=sql-server-host-ip
+SQL_PORT=9002
+SQL_USER=sql-user
+SQL_PASS=your-sql-password-with-special-chars-url-encoded
+SQL_DB=target-database-name
+SQL_METADATA_CACHE_PATH=/app/assets/schema_cache.json
+SQL_REQUIRED_TABLES=table1,table2,table3  # Comma-separated list of tables to include
+SQL_ENDPOINT_ENABLED=false  # Set to true to enable /api/v1/sql/query endpoint
 
-## SQL Server Configuration
-SQL_HOST=sql server host
-SQL_PORT=sql server port
-SQL_USER=sql user
-SQL_PASS=sql password
-SQL_DB=sql database
-SQL_METADATA_CACHE_PATH=/path/to/cached/schema/json/in/container
-SQL_REQUIRED_TABLE=needed tables separated by commas, EG -> table1,table2
+# ============================================================================
+# Workflow Configuration
+# ============================================================================
+AGENTIC_RAG_WORKFLOW_CONFIG_PATH=/app/assets/agentic_rag_config_custom.yaml
+SMART_SQL_WORKFLOW_CONFIG_PATH=/app/assets/smart_sql_config.yaml
+PROMPTS_PATH=/app/assets/prompts.yaml
+
+# ============================================================================
+# Source Download Configuration
+# ============================================================================
+SOURCE_DOWNLOAD_API_PATH_BASE=http://api-host:8700/api/v1/download
 ```
 
-## Assets Setup
+### 2. Prepare Assets Folder
 
-1. Create an `assets` folder in the project root if it doesn't exist:
+Create the `assets` folder with required configuration and cache files:
+
 ```bash
 mkdir -p assets
 ```
 
-2. If you have a cached SQL database schema, place it in the assets folder as `schema_cache.json`. This file should match the path specified in `SQL_METADATA_CACHE_PATH` environment variable. The schema cache helps optimize SQL query performance and is required for SQL-related features.
+The assets folder must contain:
 
-## Installation and Running
+1. **Configuration Files** (YAML):
+   - `agentic_rag_config.yaml` - Default RAG workflow configuration
+   - `smart_sql_config.yaml` - SQL workflow configuration
+   - `prompts.yaml` - LLM system prompts and templates
 
-1. First, build the Docker images:
-```bash
-# Build the FastAPI application image
-docker build -t agentic_rag:1.0.0 -f Dockerfile.Base .
+2. **Cache Files** (JSON):
+   - `schema_cache.json` - Cached SQL database schema (generated from `SQL_REQUIRED_TABLES`)
 
-# Build the Weaviate UI image
-docker build -t weaviate_ui:1.0.0 -f weaviate_ui/Dockerfile weaviate_ui
-```
+#### Creating `schema_cache.json`
 
-2. Start the services using Docker Compose:
-```bash
-# Start all services
-docker-compose up -d
+The schema cache is crucial for SQL query performance. It should contain the structure of your SQL database tables:
 
-# To see the logs
-docker-compose logs -f
-
-# To stop all services
-docker-compose down
-```
-
-3. The services will be available at:
-   - FastAPI application: http://host:8700
-   - Weaviate: http://host:8500
-   - Weaviate UI: http://host:8501 (A user-friendly interface for searching and analyzing Weaviate collections)
-
-## API Usage
-
-### Main Query Endpoint
-```http
-POST /api/v1/query
-
+```json
 {
-    "message": "Your question",
-    "collection": "your_collection_name",
-    "top_k": 3,
-    "use_local_embedding": true
+  "table1": {
+    "columns": [
+      {
+        "name": "column_name",
+        "type": "varchar",
+        "nullable": true
+      }
+    ]
+  }
 }
 ```
 
-Example using curl:
+**Note**: This file is typically generated by introspecting your SQL database. If not present, the system will attempt to generate it at runtime (requires SQL write permissions).
+
+#### Configuration File Examples
+
+The workflow configuration files control how the RAG and SQL workflows behave. Refer to existing config files in the assets folder for the specific format and available parameters.
+
+## Installation and Running
+
+### Local Development Setup
+
+1. **Create Python Virtual Environment**:
+```bash
+python3.12 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+2. **Install Dependencies**:
+```bash
+pip install -r requirements.txt
+```
+
+3. **Configure Environment**:
+   - Copy the `.env` template above and populate with your service credentials
+   - Ensure all external services (Weaviate, MongoDB, SQL Server) are accessible
+   - Verify the assets folder contains all required configuration files
+
+4. **Run Locally**:
+```bash
+# Start FastAPI application with auto-reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Or use the default port from .env
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8700
+```
+
+The API will be available at:
+- FastAPI Docs: http://localhost:8000/docs
+- OpenAPI JSON: http://localhost:8000/openapi.json
+
+### Docker Deployment
+
+1. **Build Docker Images**:
+```bash
+# Build the main FastAPI application
+docker build -t agentic_rag:1.0.0 -f Dockerfile.Base .
+
+# Build the Weaviate UI (optional)
+docker build -t weaviate_ui:1.0.0 -f weaviate_ui/Dockerfile weaviate_ui
+```
+
+2. **Start Services with Docker Compose**:
+```bash
+# Start all services in the background
+docker-compose up -d
+
+# View logs in real-time
+docker-compose logs -f app
+
+# View logs for specific service
+docker-compose logs -f weaviate_ui
+
+# Stop all services
+docker-compose down
+
+# Rebuild and restart
+docker-compose up -d --build
+```
+
+3. **Access Services**:
+   - FastAPI Application: http://localhost:8700 (or configured APP_PORT)
+   - API Documentation: http://localhost:8700/docs
+   - Weaviate UI: http://localhost:8501 (or configured WEAVIATE_UI_PORT)
+   - Weaviate Direct: http://weaviate-host:8100 (external service)
+
+## API Usage
+
+### 1. Agentic RAG Query
+
+Send a natural language query to be processed by the RAG workflow:
+
+```http
+POST /api/v1/query
+Content-Type: application/json
+
+{
+    "message": "What are the main rules?",
+    "collection": "my_collection_name",
+    "top_k": 3,
+    "use_local_embedding": false
+}
+```
+
+**Parameters**:
+- `message` (required): Natural language question
+- `collection` (required): Weaviate collection name to search in
+- `top_k` (optional): Number of documents to retrieve (default: 3)
+- `use_local_embedding` (optional): Use local embeddings instead of API (default: false)
+
+**Example using curl**:
 ```bash
 curl -X POST "http://localhost:8700/api/v1/query" \
      -H "Content-Type: application/json" \
      -d '{
-           "message": "What are the rules?",
-           "collection": "my_collection",
-           "top_k": 3,
-           "use_local_embedding": false
-         }'
+       "message": "What are the rules?",
+       "collection": "my_collection",
+       "top_k": 3
+     }'
 ```
 
-### SQL Query Endpoint
+**Response**:
+```json
+{
+  "answer": "The main rules are...",
+  "sources": [
+    {
+      "filename": "document1.pdf",
+      "download_link": "/api/v1/download/document1.pdf"
+    }
+  ],
+  "metadata": {}
+}
+```
+
+### 2. SQL Query Endpoint (Optional)
+
+Convert natural language to SQL and execute queries (if `SQL_ENDPOINT_ENABLED=true`):
+
 ```http
 POST /api/v1/sql/query
+Content-Type: application/json
 
 {
-    "message": "Your natural language query",
+    "message": "Show all orders from January 2024",
     "use_cache": true
 }
 ```
 
-Example using curl:
+**Parameters**:
+- `message` (required): Natural language query description
+- `use_cache` (optional): Use cached schema for faster execution (default: true)
+
+**Example using curl**:
 ```bash
 curl -X POST "http://localhost:8700/api/v1/sql/query" \
      -H "Content-Type: application/json" \
      -d '{
-           "message": "Show me all orders from last month",
-           "use_cache": true
-         }'
+       "message": "Show me all records from this year",
+       "use_cache": true
+     }'
 ```
 
-### Source Document Download
-The system provides downloadable links to source documents referenced in responses:
+### 3. Source Document Download
+
+Download source documents referenced in responses:
 
 ```http
 GET /api/v1/download/{filename}
 ```
 
-Features:
-- Streams file content for efficient memory usage
-- Supports UTF-8 filenames (Persian/Arabic text)
+**Features**:
+- Efficient streaming (minimal memory usage)
+- UTF-8 filename support (Persian/Arabic text)
 - Automatic content-type detection
-- Proper file attachment headers for browser downloads
+- Proper browser download headers
 
-The download URLs are automatically included in query responses when sources are referenced. Each source reference includes:
-- A superscript number (e.g., ¹, ², ³)
-- A clickable link to download the source document
-- Automatic deduplication of repeated sources
-
-## Development
-
-To run the project locally for development:
-
-1. Create a Python virtual environment:
+**Example**:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+curl -X GET "http://localhost:8700/api/v1/download/document_name.pdf" \
+     -o downloaded_file.pdf
 ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+## Workflow Architecture
 
-3. Run the FastAPI application:
-```bash
-uvicorn app.main:app --reload --port 8000
-```
+The system uses LangGraph to orchestrate complex workflows:
+
+### Agentic RAG Workflow
+1. **Extract Keywords**: Parse the user query for search terms
+2. **Retrieve Documents**: Query Weaviate for relevant documents
+3. **Grade Documents**: Assess document relevance to the query
+4. **Detect Sources**: Identify source filenames for attribution
+5. **Generate Answer**: Create comprehensive answer from retrieved context
+6. **Source Attribution**: Generate download links for source documents
+7. **Return Results**: Merge and deduplicate results
+
+### Smart SQL Workflow
+1. **Decision Point**: Determine if query is SQL-suitable
+2. **SQL Generation**: Convert natural language to SQL query
+3. **Schema Caching**: Use cached schema for query optimization
+4. **Execute Query**: Run SQL against the database
+5. **Generate Answer**: Format results in natural language
+6. **Return Results**: Return structured query results
+
+Both workflows are configurable via YAML files in the `assets` folder.
 
 ## Troubleshooting
 
-1. If you get authentication errors:
-   - Check if the `.env` file contains the correct credentials
-   - Verify MongoDB authentication settings (username, password, and database)
-   - Check Weaviate API key configuration
+### Connection Issues
 
-2. If source downloads fail:
-   - Verify `SOURCE_DOWNLOAD_API_PATH_BASE` is correctly set in `.env`
-   - Check MongoDB connection and collection name
-   - Ensure the files were properly uploaded to MongoDB
-   - For Persian/Arabic filenames, verify UTF-8 encoding is preserved
+**Weaviate Connection Error**:
+- Verify `WEAVIATE_HOST` and `WEAVIATE_PORT` are correct
+- Check network connectivity to Weaviate server
+- Verify `WEAVIATE_USER_KEY` authentication credentials
+- Test with: `curl http://WEAVIATE_HOST:WEAVIATE_PORT/v1/well-known/ready`
 
-3. If the services don't start:
-   - Check if the required ports are available
-   - Verify Docker and Docker Compose installation
-   - Check the logs using `docker-compose logs`
-   - Ensure all required environment variables are set
+**MongoDB Connection Error**:
+- Verify `MONGODB_URI` format and credentials
+- Check if MongoDB is running and accessible
+- Verify username/password in `MONGODB_URI` matches `MONGODB_INITDB_DEV_USERNAME/PASSWORD`
+- Test with: `mongosh "mongodb://user:pass@host:port"`
+
+**SQL Server Connection Error**:
+- Verify `SQL_HOST`, `SQL_PORT`, `SQL_USER`, and `SQL_PASS` are correct
+- Ensure SQL Server is running and accessible
+- For special characters in password, use URL encoding (e.g., `@` → `%40`)
+- Check firewall rules allowing connection to SQL port
+- Verify `SQL_DB` database exists and user has permissions
+
+### LLM and Embedding Issues
+
+**API Key Error**:
+- Verify `API_KEY` is valid for chosen provider (OpenRouter, AvalAI, etc.)
+- Check that API key hasn't expired or been revoked
+- Ensure account has sufficient credits/quota
+
+**Embedding Model Error**:
+- Verify `EMBEDDING_URL` and `EMBEDDING_MODEL` are correct
+- Check embedding service is running and accessible
+- Test with: `curl http://EMBEDDING_URL/v1/models`
+
+### Workflow Configuration Issues
+
+**Missing Configuration Files**:
+- Ensure `assets` folder exists with all required YAML files
+- Verify paths in `.env` match actual file locations
+- Check file permissions (readable by application)
+
+**Schema Cache Issues**:
+- If SQL queries fail, verify `schema_cache.json` contains correct table definitions
+- Ensure `SQL_REQUIRED_TABLES` matches tables in schema cache
+- For missing schema, regenerate from SQL database
+
+### Docker-Specific Issues
+
+**Port Already in Use**:
+```bash
+# Find process using port
+lsof -i :8700
+
+# Change port in .env
+APP_PORT=8701
+
+# Restart services
+docker-compose up -d
+```
+
+**Services Won't Start**:
+```bash
+# Check container logs
+docker-compose logs app
+docker-compose logs weaviate_ui
+
+# Verify environment file
+cat .env | grep -E "^[A-Z_]+=.*" | head -20
+```
+
+**Permission Denied on assets**:
+```bash
+# Fix folder permissions
+chmod 755 assets
+chmod 644 assets/*
+```
+
+## Development Guide
+
+### Project Dependencies
+
+Key dependencies:
+- **FastAPI**: Web framework
+- **LangGraph**: Workflow orchestration
+- **Weaviate**: Vector store operations
+- **PyMongo**: MongoDB client
+- **pyodbc/pymysql**: SQL database connectivity
+- **OpenAI/LangChain**: LLM integrations
+
+### Adding New Workflow Nodes
+
+1. Create new node file in `app/workflows/nodes/`
+2. Implement node function with proper state handling
+3. Register node in workflow graph (`app/workflows/graph.py`)
+4. Update workflow config YAML if parameters needed
+
+### Modifying Workflow Configuration
+
+Edit YAML files in `assets/` folder to adjust:
+- Node parameters and thresholds
+- Routing logic in decision points
+- Prompt templates and system messages
+- Embedding and retrieval settings
+
+### Testing Locally
+
+```bash
+# Run with verbose logging
+LOGLEVEL=DEBUG uvicorn app.main:app --reload
+
+# Test specific endpoint
+python -m pytest tests/ -v
+
+# Check code quality
+pylint app/
+
+# Type checking
+mypy app/
+```
 
 ## Contributing
 
-1. Fork the repository
-2. Create a new branch for your feature
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details
+1. Create a new branch for your feature: `git checkout -b feature/your-feature`
+2. Make your changes and test thoroughly
+3. Ensure all dependencies are documented in `requirements.txt`
+4. Update this README if adding new features or configuration options
+5. Submit a pull request with clear description of change
