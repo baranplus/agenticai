@@ -2,7 +2,6 @@ from langgraph.runtime import Runtime
 from langchain_core.messages import AIMessage
 
 from workflows.states import AgenticRAGState, AgenticRAGContextSchema
-from ai.prompt_templates import FILENAME_DETECTION_PROMPT
 from configs.env_configs import env_config
 from utils.logger import logger
 
@@ -18,7 +17,7 @@ def detect_filename(state : AgenticRAGState, runtime : Runtime[AgenticRAGContext
         collection_name=state["mongodb_files_collection"],
         field_name="filename"
     )
-    prompt = FILENAME_DETECTION_PROMPT.format(
+    prompt = runtime.context.prompt_registry.get("detection", "filename", "v1").format(
         question=question,
         available_files="\n".join(f"{fid}: {fn}" for fid, fn in available_filenames.items())
     )

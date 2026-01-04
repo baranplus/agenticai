@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Response, status
 from langchain_core.messages import HumanMessage
 import traceback
 
-from routers import SQLDatabaseManagerDependency, SmartRAGDependency, LLMDependency
+from routers import SQLDatabaseManagerDependency, SmartRAGDependency, LLMDependency, PromptRegistryDependency
 
 from schema.request import GeneralQueryRequest
 from utils.logger import logger
@@ -13,7 +13,9 @@ router = APIRouter()
 async def query(
     sql_manager : SQLDatabaseManagerDependency,
     smart_sql_graph : SmartRAGDependency,
+    prompt_registry : PromptRegistryDependency,
     llm : LLMDependency,
+
     request: GeneralQueryRequest
 ):
 
@@ -25,6 +27,7 @@ async def query(
         runtime_context = {
             "sql_manager" : sql_manager,
             "llm" : llm,
+            "prompt_registry" : prompt_registry
         }
 
         response = smart_sql_graph.invoke(init_state, context=runtime_context)

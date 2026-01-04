@@ -10,10 +10,6 @@ from workflows.states import (
     SmartSQLPipelineContextSchema
 )
 
-from ai.prompt_templates import (
-    GENERATE_PROMPT_AGENTIC_RAG,
-    GENERATE_PROMPT_SMART_SQL
-)
 from configs.env_configs import env_config
 from utils.logger import logger
 
@@ -36,7 +32,7 @@ def generate_answer_agentic_rag_for_vector_search(
     docs =  state["vector_docs"]
     context, sourcing  = augment_context(docs)
 
-    prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
+    prompt = runtime.context.prompt_registry.get("generate_answer", "agentic_rag", "v1").format(question=question, context=context)
 
     response = runtime.context.llm.get_completions(
         model_name=env_config.generation_model,
@@ -58,7 +54,7 @@ def generate_answer_agentic_rag_for_fulltext_search(
     docs =  state["full_text_docs"]
     context, sourcing  = augment_context(docs)
 
-    prompt = GENERATE_PROMPT_AGENTIC_RAG.format(question=question, context=context)
+    prompt = runtime.context.prompt_registry.get("generate_answer", "agentic_rag", "v1").format(question=question, context=context)
 
     response = runtime.context.llm.get_completions(
         model_name=env_config.generation_model,
@@ -78,7 +74,7 @@ def generate_answer_smart_sql(
     question = state["messages"][0].content
     context = state["messages"][-1].content
     logger.info(f"------\n\n{context}\n\n------------")
-    prompt = GENERATE_PROMPT_SMART_SQL.format(question=question, context=context)
+    prompt = runtime.context.prompt_registry.get("generate_answer", "smart_sql", "v1").format(question=question, context=context)
     response = runtime.context.llm.get_completions(
         model_name=env_config.generation_model,
         temperature=0.0,
