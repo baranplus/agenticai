@@ -12,11 +12,11 @@ httpx
 pymongo[srv]
 ollama
 openai
-langchain
+langchain==0.3.27
 langgraph
 langchain-chroma
 langchain-community
-langchain-core
+langchain-core==0.3.79
 langchain-experimental
 langchain-neo4j
 langchain-openai
