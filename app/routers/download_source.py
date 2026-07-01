@@ -70,8 +70,8 @@ async def download_page(
     chunk_index : int
 ):
     """
-    Retrieves a file from MongoDB based on the filename 
-    and streams it back to the user.
+    Retrieves a page/chunk from MongoDB based on the filename and file_id.
+    Supports both image pages (PDF) and text pages (DOCX/DOC).
     """
     if not mongo_db.check_db_existence(db_name) or not mongo_db.check_collection_existence(db_name, collection_name):
         raise HTTPException(
@@ -80,8 +80,25 @@ async def download_page(
         )
 
     try:
+        # Determine file type from original filename
+        file_ext = filename.lower().split('.')[-1] if '.' in filename else 'unknown'
+        is_docx_or_doc = file_ext in ['docx', 'doc']
+        
         search_record = {"fileId" : file_id, "chunk_index" : chunk_index}
         file_size, content_stream = mongo_db.get_file_from_collection(db_name, collection_name, search_record)
+        
+        # Determine content type and file extension based on source file type
+        # Note: get_file_from_collection already decodes base64 data stored in MongoDB
+        if is_docx_or_doc:
+            # For DOCX/DOC files, the content is stored as base64-encoded text
+            # get_file_from_collection already decoded it, so content_stream has the original text bytes
+            content_type = "text/plain"
+            page_ext = "txt"
+        else:
+            # For PDF files, the data is stored as JPEG images
+            content_type = "image/jpeg"
+            page_ext = "jpg"
+        
         def file_iterator():
             chunk_size = 4096
             while True:
@@ -91,16 +108,15 @@ async def download_page(
                 yield chunk
             content_stream.close()
 
-        filename = f"{filename}_page_{chunk_index}.jpg"
-        content_type = "application/octet-stream"
-        if filename.lower().endswith(('.jpg', '.jpeg')):
-            content_type = "image/jpeg"
+        output_filename = f"{filename}_page_{chunk_index}.{page_ext}"
+        encoded_filename = urllib.parse.quote(output_filename)
 
-        encoded_filename = encoded_filename = urllib.parse.quote(filename)
+        # Use 'inline' for images, 'attachment' for text
+        disposition = 'inline' if not is_docx_or_doc else 'inline'
 
         headers = {
-            'Content-Disposition': f'inline; filename*=UTF-8\'\'{encoded_filename}',
-            'Content-Length': file_size
+            'Content-Disposition': f'{disposition}; filename*=UTF-8\'\'{encoded_filename}',
+            'Content-Length': str(file_size)
         }
 
         return StreamingResponse(
