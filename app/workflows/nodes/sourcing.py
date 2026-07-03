@@ -42,6 +42,14 @@ def prettify_sources(text, sourcing):
 
     return replaced_text, superscript_to_idx
 
+def page_range(chunk_index, total_pages=None, radius=1):
+    actual_page = chunk_index
+    start_page = max(actual_page - radius, 1)
+    end_page = actual_page + radius
+    if total_pages is not None and total_pages > 0:
+        end_page = min(end_page, total_pages)
+    return actual_page, start_page, end_page
+
 def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
     new_answer, source_matching = prettify_sources(answer, sourcing)
     has_sources = bool(source_matching)
@@ -55,21 +63,35 @@ def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
         filename = src_meta["filename"]
         file_id = src_meta.get("fileId")
         chunk_index = src_meta.get("chunk_index", 0)
+        total_pages = src_meta.get("total_pages")
         encoded_filename = urllib.parse.quote(filename)
+        
+        actual_page, start_page, end_page = page_range(chunk_index, total_pages)
         
         # Determine file extension
         file_extension = os.path.splitext(filename)[1].lower().strip('.')
         
-        download_url = f"{env_config.source_download_api_path_base}/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{chunk_index}"
+        download_url_actual_page = f"{env_config.source_download_api_path_base}/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{actual_page}"
+        download_url_start_page = f"{env_config.source_download_api_path_base}/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{start_page}"
+        download_url_end_page = f"{env_config.source_download_api_path_base}/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{end_page}"
         
         if file_extension == "jpg":
             sourcing_filename = f"{os.path.splitext(filename)[0]}_{chunk_index}.jpg"
             download_link = f"![{sourcing_filename}]({download_url})"
+            download_link_actual_page = f"[{sourcing_filename}]({download_url_actual_page})"
+            download_link_start_page = f"[{sourcing_filename}]({download_url_start_page})"
+            download_link_end_page = f"[{sourcing_filename}]({download_url_end_page})"
         else:  # For docx or other formats
-            download_link = f"[{filename}]({download_url})"
-       
-        new_answer += f"صفحه {chunk_index} : \n"
-        new_answer += f"{superscript} {download_link}\n"
+            download_link_actual_page = f"[{filename}]({download_url_actual_page})"
+            download_link_start_page = f"[{filename}]({download_url_start_page})"
+            download_link_end_page = f"[{filename}]({download_url_end_page})"
+        
+        new_answer += f"صفحه تقریبی {actual_page + 1} : "
+        new_answer += f"{superscript} {download_link_actual_page}\n"
+
+        new_answer += f"صفحات قبل و بعد {start_page + 1}, {end_page + 1} : "
+        new_answer += f"{superscript} {download_link_start_page}\n"
+        new_answer += f"{superscript} {download_link_end_page}\n\n"
 
     return new_answer.strip() if has_sources else ""
 
