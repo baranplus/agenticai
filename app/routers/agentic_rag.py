@@ -7,6 +7,7 @@ from schema.request import AgenticRAGQueryRequest
 from routers import (
     WeaviateClientDependency,
     MongoDBManagerDependency,
+    RedisManagerDependency,
     LLMDependency,
     EmbeddingDependency,
     AgenticRagDependency,
@@ -21,6 +22,7 @@ router = APIRouter()
 async def query(
     weaviate_manager : WeaviateClientDependency,
     mongodb_manager : MongoDBManagerDependency,
+    redis_manager : RedisManagerDependency,
     llm : LLMDependency,
     embedding : EmbeddingDependency,
     agentic_graph : AgenticRagDependency,
@@ -100,6 +102,7 @@ async def query(
         runtime_context = {
             "weaviate_manager" : weaviate_manager,
             "mongodb_manager" : mongodb_manager,
+            "redis_manager" : redis_manager,
             "llm" : llm,
             "embedding" : embedding,
             "use_file_filtering" : request.use_file_filtering,

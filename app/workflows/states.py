@@ -4,7 +4,7 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 from typing import Annotated, TypedDict, List
 
-from db import WeaviateClientManager, MongoDBManager,SQLDatabaseManager
+from db import WeaviateClientManager, MongoDBManager,SQLDatabaseManager, RedisManager
 from ai import LLM, Embedding, PromptRegistry
 
 class AgenticRAGState(TypedDict):
@@ -29,6 +29,7 @@ class SmartSQLPipelineState(TypedDict):
 class AgenticRAGContextSchema:
     weaviate_manager : WeaviateClientManager
     mongodb_manager : MongoDBManager
+    redis_manager : RedisManager
     llm : LLM
     embedding : Embedding
     use_file_filtering : bool

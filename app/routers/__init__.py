@@ -6,9 +6,11 @@ from db import (
     get_mongodb_manager,
     get_weaviate_client_manager,
     get_sql_manager,
+    get_redis_manager,
     WeaviateClientManager,
     MongoDBManager,
-    SQLDatabaseManager
+    SQLDatabaseManager,
+    RedisManager
 )
 
 from ai import get_llm, get_embedding, get_prompt_registry, LLM, Embedding, PromptRegistry
@@ -17,6 +19,7 @@ from workflows import get_agentic_rag_graph, get_smart_sql_graph
 WeaviateClientDependency = Annotated[WeaviateClientManager, Depends(get_weaviate_client_manager)]
 MongoDBManagerDependency = Annotated[MongoDBManager, Depends(get_mongodb_manager)]
 SQLDatabaseManagerDependency = Annotated[SQLDatabaseManager, Depends(get_sql_manager)]
+RedisManagerDependency = Annotated[RedisManager, Depends(get_redis_manager)]
 LLMDependency = Annotated[LLM, Depends(get_llm)]
 EmbeddingDependency = Annotated[Embedding, Depends(get_embedding)]
 AgenticRagDependency = Annotated[CompiledStateGraph, Depends(get_agentic_rag_graph)]
