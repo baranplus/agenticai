@@ -36,6 +36,11 @@ class Environment_Config:
     agentic_rag_workflow_config_path : str
     smart_sql_workflow_config_path : str
     prompts_path : str
+    redis_host : str
+    redis_port : int
+    redis_db : int
+    redis_password : str
+    redis_cache_enabled : bool
     
     @classmethod
     def initialize(cls) -> "Environment_Config":
@@ -66,6 +71,12 @@ class Environment_Config:
         agentic_rag_workflow_config_path = os.environ.get("AGENTIC_RAG_WORKFLOW_CONFIG_PATH")
         smart_sql_workflow_config_path = os.environ.get("SMART_SQL_WORKFLOW_CONFIG_PATH")
         prompts_path = os.environ.get("PROMPTS_PATH")
+        redis_host = os.environ.get("REDIS_HOST", "localhost")
+        redis_port = int(os.environ.get("REDIS_PORT", "6379"))
+        redis_db = int(os.environ.get("REDIS_DB", "0"))
+        redis_password = os.environ.get("REDIS_PASSWORD", None)
+        redis_cache_enabled = os.environ.get("REDIS_CACHE_ENABLED", "false").lower() == "true"
+        
         return cls(
             api_key = api_key,
             base_url = base_url,
@@ -92,7 +103,12 @@ class Environment_Config:
             sql_endpoint_enabled = sql_endpoint_enabled,
             agentic_rag_workflow_config_path = agentic_rag_workflow_config_path,
             smart_sql_workflow_config_path = smart_sql_workflow_config_path,
-            prompts_path = prompts_path
+            prompts_path = prompts_path,
+            redis_host = redis_host,
+            redis_port = redis_port,
+            redis_db = redis_db,
+            redis_password = redis_password,
+            redis_cache_enabled = redis_cache_enabled
         )
 
 env_config = Environment_Config.initialize()

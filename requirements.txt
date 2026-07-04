@@ -26,3 +26,4 @@ langchain-weaviate
 psycopg2-binary
 pymysql
 pyodbc
+redis
