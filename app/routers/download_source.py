@@ -1,7 +1,7 @@
 import traceback
 import urllib
 from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 
 from routers import MongoDBManagerDependency
 from utils.logger import logger
@@ -132,3 +132,69 @@ async def download_page(
         error = traceback.format_exc()
         logger.error(f"Error downloading file: {str(error)}")
         raise HTTPException(status_code=500, detail=f"Error downloading file: {str(e)}")
+
+
+@router.get("/download-pages/{db_name}/{collection_name}/{filename}/{file_id}/{chunk_indexes}")
+async def download_pages(
+    mongo_db: MongoDBManagerDependency,
+    db_name: str,
+    collection_name,
+    filename: str,
+    file_id: str,
+    chunk_indexes: str,
+):
+    """
+    Retrieves multiple page/chunk documents from MongoDB for a given file_id,
+    concatenates their decoded text content, and returns it as an inline plain text response.
+    """
+    if not mongo_db.check_db_existence(db_name) or not mongo_db.check_collection_existence(db_name, collection_name):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Database '{db_name}' or Collection '{collection_name}' not found in the database."
+        )
+
+    try:
+        file_ext = filename.lower().split('.')[-1] if '.' in filename else 'unknown'
+        if file_ext not in ['docx', 'doc']:
+            raise HTTPException(status_code=400, detail="This endpoint only supports DOC/DOCX files")
+
+        requested_indexes = []
+        for value in chunk_indexes.split(','):
+            value = value.strip()
+            if not value:
+                continue
+            requested_indexes.append(int(value))
+
+        if not requested_indexes:
+            raise HTTPException(status_code=400, detail="No valid chunk indexes were provided")
+
+        chunks = []
+        for chunk_index in requested_indexes:
+            search_record = {"fileId": file_id, "chunk_index": chunk_index}
+            _, content_stream = mongo_db.get_file_from_collection(db_name, collection_name, search_record)
+            content = content_stream.read()
+            content_stream.close()
+            if isinstance(content, bytes):
+                chunks.append(content.decode('utf-8', errors='replace'))
+            else:
+                chunks.append(str(content))
+
+        combined_text = "\n\n".join(chunks)
+        content_bytes = combined_text.encode('utf-8')
+
+        return PlainTextResponse(
+            content=combined_text,
+            status_code=200,
+            headers={
+                "Content-Disposition": "inline; filename=preview.txt",
+                "Content-Length": str(len(content_bytes)),
+            },
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        error = traceback.format_exc()
+        logger.error(f"Error downloading pages: {str(error)}")
+        raise HTTPException(status_code=500, detail=f"Error downloading pages: {str(e)}")

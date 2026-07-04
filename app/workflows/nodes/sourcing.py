@@ -77,21 +77,17 @@ def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
         
         if file_extension == "jpg":
             sourcing_filename = f"{os.path.splitext(filename)[0]}_{chunk_index}.jpg"
+            download_url = f"{env_config.source_download_api_path_base}/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{actual_page}"
             download_link = f"![{sourcing_filename}]({download_url})"
-            download_link_actual_page = f"[{sourcing_filename}]({download_url_actual_page})"
-            download_link_start_page = f"[{sourcing_filename}]({download_url_start_page})"
-            download_link_end_page = f"[{sourcing_filename}]({download_url_end_page})"
-        else:  # For docx or other formats
-            download_link_actual_page = f"[{filename}]({download_url_actual_page})"
-            download_link_start_page = f"[{filename}]({download_url_start_page})"
-            download_link_end_page = f"[{filename}]({download_url_end_page})"
-        
-        new_answer += f"صفحه تقریبی {actual_page + 1} : "
-        new_answer += f"{superscript} {download_link_actual_page}\n"
+            new_answer += f"صفحه تقریبی {actual_page + 1} : "
+            new_answer += f"{superscript} {download_link}\n"
 
-        new_answer += f"صفحات قبل و بعد {start_page + 1}, {end_page + 1} : "
-        new_answer += f"{superscript} {download_link_start_page}\n"
-        new_answer += f"{superscript} {download_link_end_page}\n\n"
+
+        else:  # For docx or other formats
+            download_url = f"{env_config.source_download_api_path_base}-pages/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{actual_page},{start_page},{end_page}"
+            download_link = f"[{filename}]({download_url})"
+            new_answer += f"صفحهات تقریبی {start_page + 1},{actual_page + 1},{end_page + 1} : "
+            new_answer += f"{superscript} {download_link}\n"
 
     return new_answer.strip() if has_sources else ""
 
