@@ -16,6 +16,7 @@ class AgenticRAGState(TypedDict):
     filtered_filenames : List[str]
     top_k: int
     return_docs: bool
+    cache_question_retrieval_successful: bool
     weaviate_collection: str
     mongodb_dbname: str
     mongodb_files_collection : str

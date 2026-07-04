@@ -27,11 +27,15 @@ def load_workflow_config(
     for edge in conditional_edges_data:
         condition_fn = condition_functions[edge["condition_fn"]]
         source = START if edge["source"] == "START" else edge["source"]
+        mapping = {
+            key: (END if value == "END" else value)
+            for key, value in edge["mapping"].items()
+        }
         conditional_edges.append(
             ConditionalEdgeConfig(
                 source=source,
                 condition_fn=condition_fn,
-                mapping=edge["mapping"],
+                mapping=mapping,
             )
         )
 
