@@ -84,7 +84,7 @@ def concatenate_answer(answer, sourcing, mongodb_db, mongodb_collection):
 
 
         else:  # For docx or other formats
-            download_url = f"{env_config.source_download_api_path_base}-pages/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{actual_page},{start_page},{end_page}"
+            download_url = f"{env_config.source_download_api_path_base}-pages/{mongodb_db}/{mongodb_collection}/{encoded_filename}/{file_id}/{start_page},{actual_page},{end_page}"
             download_link = f"[{filename}]({download_url})"
             new_answer += f"صفحهات تقریبی {start_page + 1},{actual_page + 1},{end_page + 1} : "
             new_answer += f"{superscript} {download_link}\n"

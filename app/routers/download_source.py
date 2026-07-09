@@ -155,7 +155,7 @@ async def download_pages(
 
     try:
         file_ext = filename.lower().split('.')[-1] if '.' in filename else 'unknown'
-        if file_ext not in ['docx', 'doc']:
+        if file_ext not in ['docx', 'doc', 'unknown']:
             raise HTTPException(status_code=400, detail="This endpoint only supports DOC/DOCX files")
 
         requested_indexes = []
@@ -170,14 +170,18 @@ async def download_pages(
 
         chunks = []
         for chunk_index in requested_indexes:
-            search_record = {"fileId": file_id, "chunk_index": chunk_index}
-            _, content_stream = mongo_db.get_file_from_collection(db_name, collection_name, search_record)
-            content = content_stream.read()
-            content_stream.close()
-            if isinstance(content, bytes):
-                chunks.append(content.decode('utf-8', errors='replace'))
-            else:
-                chunks.append(str(content))
+            try:
+                search_record = {"fileId": file_id, "chunk_index": chunk_index}
+                _, content_stream = mongo_db.get_file_from_collection(db_name, collection_name, search_record)
+                content = content_stream.read()
+                content_stream.close()
+                if isinstance(content, bytes):
+                    chunks.append(content.decode('utf-8', errors='replace'))
+                else:
+                    chunks.append(str(content))
+            except Exception as e:
+                logger.error(f"Error retrieving chunk {chunk_index}: {str(e)}")
+                continue
 
         combined_text = "\n\n".join(chunks)
         content_bytes = combined_text.encode('utf-8')
