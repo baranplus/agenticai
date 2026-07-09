@@ -16,7 +16,10 @@ def retrieve_cached_question_answer(
     if not question:
         return {"cache_question_retrieval_successful": False}
 
-    cached_answer = runtime.context.redis_manager.get_answer_by_question(question)
+    # Get mongodb_name from runtime context
+    mongodb_name = state["mongodb_dbname"]
+    
+    cached_answer = runtime.context.redis_manager.get_answer_by_question(question, mongodb_name)
 
     if cached_answer and cached_answer.get("answer"):
         logger.info(f"Found cached answer for question: {question}")

@@ -19,9 +19,12 @@ def cache_last_question_answer(
         answer = getattr(state["messages"][-1], "content", None)
 
     if question and answer:
+        mongodb_name = state["mongodb_dbname"]
+        
         runtime.context.redis_manager.cache_qa_pair(
             question=question,
             answer=answer,
+            mongodb_name=mongodb_name,
             metadata={"source": "agentic_rag_workflow"},
             ttl=86400,
         )
